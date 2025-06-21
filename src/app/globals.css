@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
+/* 🌞 Light Mode */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base tones */
+  --background: #f9f9f6;             /* Soft off-white */
+  --background-muted: #f0f0eb;       /* Very light grey-beige */
+  --foreground: #171717;             /* Almost black text */
+  --foreground-muted: #4c4c4c;       /* Medium dark grey text */
+
+  /* Accents */
+  --accent: #5f6caf;                 /* Desaturated indigo */
+  --accent-light: #b4baf0;           /* Lighter accent */
+  --accent-muted: #dee0f2;           /* Softest tint */
+
+  /* Borders / Surfaces */
+  --surface: #ffffff;                /* Card/input white */
+  --border: #dcdcdc;                 /* Neutral border */
 }
 
+/* 🌘 Dark Mode (Clair Obscur inspired) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Base tones */
+    --background: #1e1e32;           /* Rich black-violet */
+    --background-muted: #16161c;     /* Deep shadow layer */
+    --foreground: #f3f3f3;           /* Soft white text */
+    --foreground-muted: #b5b5b5;     /* Muted light text */
+
+    /* Accents */
+    --accent: #9d7be0;               /* Soft violet */
+    --accent-light: #cbb7f5;         /* Lighter violet */
+    --accent-muted: #2f2942;         /* Shadowy purple tint */
+
+    /* Borders / Surfaces */
+    --surface: #1b1b23;              /* Card/input background */
+    --border: #2e2e38;               /* Low-contrast borders */
+  }
+}
+
+/* 🖥️ Tailwind Theme Bridge */
 @theme inline {
   --color-background: var(--background);
+  --color-background-muted: var(--background-muted);
   --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-muted: var(--accent-muted);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* 🪶 Base Styles */
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
