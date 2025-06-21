@@ -1,6 +1,6 @@
-import { cn } from "@/app/lib/utils";
+import { cn } from "@/lib/utils";
 import { cva, VariantProps } from "class-variance-authority";
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, SVGProps,  } from "react";
 
 const ButtonVariants = cva(
   'inline-flex justify-center items-center gap-2 p-1 rounded-2xl transition-colors',
