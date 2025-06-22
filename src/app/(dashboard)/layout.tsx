@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }:Readonly<{
             <nav>
             <Navbar/>
             </nav>
-            <main className="p-8">
+            <main className="py-6 px-20">
             {children}
             </main>
         </div>
