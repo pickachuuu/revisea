@@ -3,14 +3,16 @@ import { cva, VariantProps } from "class-variance-authority";
 import type { ComponentType, SVGProps,  } from "react";
 
 const ButtonVariants = cva(
-  'inline-flex justify-center items-center gap-2 p-1 rounded-2xl transition-colors',
+  'inline-flex justify-center items-center gap-2 p-1 transition-colors',
   {
     variants: {
       variant: {
-        primary: 'bg-foreground text-background hover:opacity-90',
+        primary: 'rounded-2xl bg-foreground text-background hover:opacity-90',
+        secondary: 'rounded-md text-background shadow-md'
       },
       size: {
         md: 'min-h-9 px-4 py-2 text-sm w-full',
+        sm: 'h-10 w-auto p-3 text-sm'
       },
     },
     defaultVariants: {
@@ -28,6 +30,7 @@ interface ButtonProps
     VariantProps<typeof ButtonVariants> {
   children: React.ReactNode;
   className?: string;
+  iconSize?: number;
   Icon?: HugeIconType;
 }
 
@@ -41,7 +44,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button className={cn(ButtonVariants({ className, variant, size }))} {...props}>
-      {Icon && <Icon />}
+      {Icon && <Icon className="h-5"/>}
       {children}
     </button>
   );
