@@ -6,8 +6,8 @@ export default function Home() {
   return (
       <div className="min-h-screen flex items-center justify-center">
         <Card>
-          <Card.Header>
-            Sign in to Revisea.
+          <Card.Header className="font-serif">
+            Sign in to Stendhal.
           </Card.Header>
 
           <Card.Content>
