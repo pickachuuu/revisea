@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth";
 
 // Font declarations
 const geistSans = Geist({
@@ -24,8 +25,8 @@ const cormorant = Cormorant_Garamond({
 
 // Metadata
 export const metadata: Metadata = {
-  title: "Revisea",
-  description: "Smart note app",
+  title: "Stendhal - Smart Learning Platform",
+  description: "Organize your learning with notes and flashcards",
 };
 
 // Root Layout
@@ -39,7 +40,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
