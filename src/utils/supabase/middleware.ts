@@ -41,17 +41,15 @@ export async function updateSession(
     data: { user },
   } = await supabase.auth.getUser()
 
-if (
-  !user &&
-  request.nextUrl.pathname !== '/' && // ✅ prevent loop when already on login page
-  !request.nextUrl.pathname.startsWith('/auth') // ✅ still avoid redirecting Supabase callbacks
-) {
-  const url = request.nextUrl.clone();
-  url.pathname = '/'; // ✅ redirect to login page at "/"
-  return NextResponse.redirect(url);
-}
-
-
+  if (
+    !user &&
+    request.nextUrl.pathname !== '/auth'
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth';
+    return NextResponse.redirect(url);
+  }
+  
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so:
