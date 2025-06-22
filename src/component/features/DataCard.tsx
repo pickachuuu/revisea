@@ -5,18 +5,20 @@ export default function DataCard() {
   const mockData = {
     title: "Total Notes",
     value: 42,
-    icon: <File01Icon/>,
+    icon: <File01Icon className="w-5 h-5" />,
   };
 
   return (
-    <Card size={'md'} className="bg-background border-1 border-zinc-200">
-      <Card.Header className="flex justify-between items-center gap-2 font-semibold text-xl">
-        {mockData.title}
-        {mockData.icon}
-      </Card.Header>
-      <Card.Content>
-        <p className="text-lg font-bold">{mockData.value}</p>
-      </Card.Content>
+    <Card variant="default" size="sm" className="bg-surface">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground-muted">{mockData.title}</p>
+          <p className="text-2xl font-bold text-foreground">{mockData.value}</p>
+        </div>
+        <div className="p-2 rounded-lg bg-accent-muted">
+          {mockData.icon}
+        </div>
+      </div>
     </Card>
   );
 }
