@@ -9,7 +9,7 @@ export default function Navbar(){
 
     return (
         <div className="sticky top-0 w-full min-h-10 bg-background-muted shadow-md rounded-b-3xl font-serif">
-            <div className="flex justify-between p-4">
+            <div className="flex justify-between px-9 py-4">
                 <div className="text-foreground font-semibold text-3xl">
                     Stendhal.
                 </div>
