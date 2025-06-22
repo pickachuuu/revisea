@@ -1,51 +1,52 @@
 import { cn } from "@/lib/utils";
 import { cva, VariantProps } from "class-variance-authority";
-import type { ComponentType, SVGProps,  } from "react";
+import { forwardRef } from "react";
 
 const ButtonVariants = cva(
-  'inline-flex justify-center items-center gap-2 p-1 transition-colors',
+  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        primary: 'rounded-2xl bg-foreground text-background hover:opacity-90',
-        secondary: 'rounded-md text-background border-1 border-zinc-400'
+        default: "bg-accent text-white hover:bg-accent-light",
+        destructive: "bg-red-500 text-white hover:bg-red-600",
+        outline: "border border-border bg-transparent hover:bg-background-muted",
+        secondary: "bg-background-muted text-foreground hover:bg-background-muted/80",
+        ghost: "hover:bg-background-muted hover:text-foreground",
+        link: "text-accent underline-offset-4 hover:underline",
       },
       size: {
-        md: 'min-h-9 px-4 py-2 text-sm w-full',
-        sm: 'h-10 w-auto p-3 text-sm'
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
       },
     },
     defaultVariants: {
-      variant: 'primary',
-      size: 'md',
+      variant: "default",
+      size: "default",
     },
   }
 );
 
-type HugeIconType = ComponentType<SVGProps<SVGSVGElement>>;
-
-
-interface ButtonProps
+export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof ButtonVariants> {
-  children: React.ReactNode;
-  className?: string;
-  iconSize?: number;
-  Icon?: HugeIconType;
+  asChild?: boolean;
 }
 
-export default function Button({
-  children,
-  className,
-  variant,
-  size,
-  Icon: Icon,
-  ...props
-}: ButtonProps) {
-  return (
-    <button className={cn(ButtonVariants({ className, variant, size }))} {...props}>
-      {Icon && <Icon className="h-5"/>}
-      {children}
-    </button>
-  );
-}
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    return (
+      <button
+        className={cn(ButtonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+
+Button.displayName = "Button";
+
+export default Button;
+export { ButtonVariants };
