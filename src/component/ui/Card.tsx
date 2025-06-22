@@ -10,6 +10,9 @@ const CardVariants = cva(
             },
             size: {
                 xl: 'min-w-120',
+                lg: 'min-w-96',
+                md: 'min-w-64',
+                auto: 'w-auto h-auto'
             }
         },
         defaultVariants: {
@@ -38,15 +41,23 @@ export default function Card({ children, className, variant, size, ...props}: Ca
 
 Card.Header = function({ children, className }: CardProps){
     return (
-        <div className={`text-center text-3xl font-semibold my-5 ${className}`}>
+        <div className={`text-3xl font-semibold ${className}`}>
             {children}
         </div>
     )
 }
 
+Card.Subtitle = function({ children, className}: CardProps){
+    return (
+        <p className={`text-background-muted shadow-foreground text-md font-semibold ${className}`} >
+            {children}
+        </p>
+    )
+}
+
 Card.Content = function({children, className}: CardProps){
     return (
-        <div className={`px-12 my-5`}>
+        <div className={`p-3 my-2 ${className}`}>
             {children}
         </div>
     )
