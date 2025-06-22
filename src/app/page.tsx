@@ -1,5 +1,5 @@
-import Card from "./component/ui/Card";
-import Button from "./component/ui/Button";
+import Card from "../component/ui/Card";
+import Button from "../component/ui/Button";
 import { GoogleGeminiIcon, ChromeIcon, GithubIcon, GoogleIcon } from "hugeicons-react";
 
 export default function Home() {
