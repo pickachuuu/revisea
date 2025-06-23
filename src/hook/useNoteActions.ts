@@ -50,5 +50,20 @@ export function useNoteActions(){
         return true;
     };
 
-    return {createNote, saveNote}
+    const getUserNotes = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) return [];
+        const { data, error } = await supabase
+            .from('notes')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('updated_at', { ascending: false });
+        if (error) {
+            console.error('Supabase error:', error);
+            return [];
+        }
+        return data || [];
+    };
+
+    return { createNote, saveNote, getUserNotes };
 }
