@@ -25,6 +25,14 @@ export default function NotesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Filter out notes with empty title, empty content, and 0 tags
+  const filteredNotes = notes.filter(
+    (note) =>
+      (note.title && note.title.trim() !== '') ||
+      (note.content && note.content.trim() !== '') ||
+      (Array.isArray(note.tags) && note.tags.length > 0)
+  );
+
   return (
     <div className="space-y-8">
       <Header 
@@ -35,12 +43,12 @@ export default function NotesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <div className="col-span-full flex justify-center items-center py-12 text-foreground-muted text-lg">Loading notes...</div>
-        ) : notes.length === 0 ? (
+        ) : filteredNotes.length === 0 ? (
           <div className="col-span-full flex flex-col items-center py-12 text-foreground-muted text-lg">
             <span>No notes found.</span>
           </div>
         ) : (
-          notes.map((note) => (
+          filteredNotes.map((note) => (
             <Card
               key={note.id}
               variant="elevated"
@@ -51,7 +59,6 @@ export default function NotesPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <Card.Title className="truncate text-lg font-semibold group-hover:text-accent transition-colors">{note.title}</Card.Title>
-                    <Card.Description className="truncate text-foreground-muted text-sm mt-1">{note.content?.slice(0, 80) || ''}</Card.Description>
                   </div>
                   <File01Icon className="w-6 h-6 text-accent shrink-0 ml-2" />
                 </div>
