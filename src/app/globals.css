@@ -19,23 +19,21 @@
 }
 
 /* 🌘 Dark Mode (Clair Obscur inspired) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Base tones */
-    --background: #1e1e32;           /* Rich black-violet */
-    --background-muted: #16161c;     /* Deep shadow layer */
-    --foreground: #f3f3f3;           /* Soft white text */
-    --foreground-muted: #b5b5b5;     /* Muted light text */
+.dark {
+  /* Base tones */
+  --background: #1e1e32;           /* Rich black-violet */
+  --background-muted: #16161c;     /* Deep shadow layer */
+  --foreground: #f3f3f3;           /* Soft white text */
+  --foreground-muted: #b5b5b5;     /* Muted light text */
 
-    /* Accents */
-    --accent: #9d7be0;               /* Soft violet */
-    --accent-light: #cbb7f5;         /* Lighter violet */
-    --accent-muted: #2f2942;         /* Shadowy purple tint */
+  /* Accents */
+  --accent: #9d7be0;               /* Soft violet */
+  --accent-light: #cbb7f5;         /* Lighter violet */
+  --accent-muted: #2f2942;         /* Shadowy purple tint */
 
-    /* Borders / Surfaces */
-    --surface: #1b1b23;              /* Card/input background */
-    --border: #2e2e38;               /* Low-contrast borders */
-  }
+  /* Borders / Surfaces */
+  --surface: #1b1b23;              /* Card/input background */
+  --border: #2e2e38;               /* Low-contrast borders */
 }
 
 /* 🖥️ Tailwind Theme Bridge */
@@ -59,7 +57,6 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
-
 
 html{
   scrollbar-gutter: stable;
