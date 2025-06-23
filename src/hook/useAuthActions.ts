@@ -16,3 +16,8 @@ export async function handleGithubLogin() {
     console.error('OAuth error:', error.message);
   }
 }
+
+export async function signOut() {
+  await supabase.auth.signOut();
+  window.location.href = '/auth';
+}
