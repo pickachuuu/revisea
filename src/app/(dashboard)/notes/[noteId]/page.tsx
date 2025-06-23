@@ -133,8 +133,7 @@ export default function NewNotePage() {
   return (
     <div className="space-y-6">
       <Header 
-        title={title || "New Note"} 
-        description="Create and edit your study notes"
+        title={"Note Editor"} 
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
