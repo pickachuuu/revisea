@@ -4,10 +4,45 @@ import { navItems } from "./navConfig";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Button from "@/component/ui/Button";
-import { Logout01Icon } from "hugeicons-react";
+import { Logout01Icon, Sun01Icon, Moon01Icon } from "hugeicons-react";
+import { useEffect, useState } from "react";
+import { signOut } from '@/hook/useAuthActions';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light"); // Default doesn't matter, will be set in useEffect
+
+  // Once mounted on client, get the theme
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") {
+      setTheme(stored);
+    } else {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      setTheme(systemTheme);
+    }
+  }, []);
+
+  // Apply theme and persist
+  useEffect(() => {
+    if (!mounted) return;
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme, mounted]);
+
+  // Listen for system theme changes if user hasn't set a preference
+  useEffect(() => {
+    if (!mounted) return;
+    const stored = localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") return; // user has set preference
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => setTheme(media.matches ? "dark" : "light");
+    media.addEventListener("change", handler);
+    return () => media.removeEventListener("change", handler);
+  }, [mounted]);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-surface/80 backdrop-blur-md border-b border-border shadow-sm">
@@ -41,7 +76,31 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            {mounted && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Toggle theme"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              >
+                {theme === "light" ? (
+                  <Sun01Icon className="w-5 h-5" />
+                ) : (
+                  <Moon01Icon className="w-5 h-5" />
+                )}
+              </Button>
+            )}
+            {/* Sign Out */}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Sign out"
+              onClick={signOut}
+            >
+              <Logout01Icon className="w-5 h-5" />
+            </Button>
             {/* Mobile menu button */}
             <div className="md:hidden">
               <button className="p-2 rounded-md text-foreground-muted hover:text-foreground hover:bg-background-muted transition-colors">
