@@ -8,20 +8,49 @@ import Header from '@/component/ui/Header';
 import { useParams } from 'next/navigation';
 import { useNoteActions } from '@/hook/useNoteActions';
 import { File01Icon } from 'hugeicons-react';
+import { createClient } from '@/utils/supabase/client';
+
+const supabase = createClient();
 
 // Importing the editor dynamically to support SSR
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export default function NewNotePage() {
   const params = useParams();
+  const noteId = params?.noteId as string | undefined;
   const { createNote, saveNote } = useNoteActions();
-  const [id, setId] = useState<string | null>(params?.noteId as string || null);
+  const [id, setId] = useState<string | null>(noteId || null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('#');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [loading, setLoading] = useState(!!noteId);
   const [lastSaved, setLastSaved] = useState({ title: '', content: '', tags: [] as string[] });
+
+  // Fetch note if editing
+  useEffect(() => {
+    const fetchNote = async () => {
+      if (noteId) {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('notes')
+          .select('title, content, tags')
+          .eq('id', noteId)
+          .single();
+        if (data) {
+          setTitle(data.title || '');
+          setContent(data.content || '');
+          setTags(data.tags || []);
+          setId(noteId);
+          setLastSaved({ title: data.title || '', content: data.content || '', tags: data.tags || [] });
+        }
+        setLoading(false);
+      }
+    };
+    fetchNote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteId]);
 
   // Create new note when there's no ID and user starts typing title
   useEffect(() => {
