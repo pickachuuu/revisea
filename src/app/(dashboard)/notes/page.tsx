@@ -81,12 +81,12 @@ export default function NotesPage() {
                 </p>
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 text-accent border-accent hover:bg-accent hover:text-white transition-colors"
+                  size="lg"
+                  className="flex items-center gap-2 text-xs text-accent border-accent hover:bg-accent hover:text-white transition-colors"
                   disabled
                   title="Generate flashcards (coming soon)"
                 >
-                  <GoogleGeminiIcon className="w-4 h-4" />
+                  <GoogleGeminiIcon className="w-6 h-6" />
                   Generate Flashcards
                 </Button>
               </Card.Footer>
