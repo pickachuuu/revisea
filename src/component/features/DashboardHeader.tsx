@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 
-export default function DashboardHeader() {
+export default function DashboardHeader({ user }: { user?: { full_name?: string; email?: string } | null }) {
   const currentDate = new Date();
   const greeting = getGreeting();
   
@@ -16,7 +16,8 @@ export default function DashboardHeader() {
   return (
     <div className="space-y-2">
       <h1 className="text-4xl font-bold text-foreground">
-        {greeting}, User
+        {greeting}
+        {user?.full_name ? `, ${user.full_name}` : user?.email ? `, ${user.email}` : ''}
       </h1>
       <p className="text-foreground-muted text-lg">
         {format(currentDate, 'EEEE, MMMM do, yyyy')}
