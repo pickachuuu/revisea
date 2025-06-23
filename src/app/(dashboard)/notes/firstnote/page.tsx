@@ -7,6 +7,7 @@ import Card from '@/component/ui/Card';
 import Button from '@/component/ui/Button';
 import Header from '@/component/ui/Header';
 import { createClient } from '@/utils/supabase/client';
+import { fullscreen } from '@uiw/react-md-editor';
 
 // Importing the editor dynamically to support SSR
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
@@ -43,9 +44,10 @@ export default function NewNotePage() {
   };
 
   return (
-    <div className=" w-full bg-background flex flex-col items-center py-8 px-2">
-      <Card variant="elevated" size="lg" className="w-full">
-        <Card.Header>
+    <div className="min-h-screen w-full bg-background items-center">
+      <div className='grid grid-cols-[1fr_3fr] gap-4'>
+       <Card className='max-h-82'>
+       <Card.Header>
           <input
             className="w-full text-2xl font-semibold border-b border-border bg-transparent mb-2 focus:outline-none focus:border-accent transition-colors placeholder:text-foreground-muted"
             placeholder="Note title..."
@@ -104,9 +106,11 @@ export default function NewNotePage() {
             </p>
           </div>
         </Card.Header>
-        <Card.Content>
+       </Card>
+
+       <Card className='h-156'>
+       <Card.Content>
           <div className="mt-2">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[400px]">
               {/* Editor Column */}
               <div className="h-full">
                 <label className="block text-sm font-medium text-foreground mb-2">
@@ -116,30 +120,19 @@ export default function NewNotePage() {
                   <MDEditor
                     value={content}
                     onChange={(val) => setContent(val || '')}
-                    height="100%"
                     preview="edit"
+                    height={'400px'}
                     textareaProps={{
                       placeholder: 'Start writing your note in Markdown...'
                     }}
-                    className="h-96"
                   />
                 </div>
               </div>
-            </div>
           </div>
         </Card.Content>
-        <Card.Footer className="justify-end">
-          <Button
-            // onClick={handleSave}
-            variant="default"
-            size="lg"
-            className="px-8"
-            type="button"
-          >
-            Save Note
-          </Button>
-        </Card.Footer>
-      </Card>
+       </Card>
+
+      </div>
     </div>
   );
 }
