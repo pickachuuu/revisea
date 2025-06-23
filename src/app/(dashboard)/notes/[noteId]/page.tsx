@@ -21,6 +21,7 @@ export default function NewNotePage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [lastSaved, setLastSaved] = useState({ title: '', content: '', tags: [] as string[] });
 
   // Create new note when there's no ID and user starts typing title
   useEffect(() => {
@@ -44,31 +45,32 @@ export default function NewNotePage() {
     handleCreateNote();
   }, [title, id, createNote]);
 
-  // Auto-save effect
+  // Improved auto-save effect
   useEffect(() => {
-    const handleSave = async () => {
-      if (!id || !title.trim()) {
-        console.log('Not saving - no id or title');
-        return;
-      }
+    if (!id || !title.trim()) return;
 
-      console.log('Preparing to save note:', { id, title, content, tags });
-      setSaveStatus('saving');
+    // Only save if something changed
+    if (
+      lastSaved.title === title &&
+      lastSaved.content === content &&
+      JSON.stringify(lastSaved.tags) === JSON.stringify(tags)
+    ) {
+      return;
+    }
 
+    setSaveStatus('saving');
+    const timeoutId = setTimeout(async () => {
       try {
         await saveNote(id, { title, content, tags });
-        console.log('Note saved successfully');
         setSaveStatus('saved');
-      } catch (error) {
-        console.error('Error saving note:', error);
+        setLastSaved({ title, content, tags });
+      } catch {
         setSaveStatus('error');
       }
-    };
+    }, 1500);
 
-    // Debounce the save
-    const timeoutId = setTimeout(handleSave, 1000);
     return () => clearTimeout(timeoutId);
-  }, [id, title, content, tags, saveNote]);
+  }, [id, title, content, tags, saveNote, lastSaved]);
 
   const handleAddTag = () => {
     const trimmedTag = tagInput.trim();
@@ -89,17 +91,14 @@ export default function NewNotePage() {
     }
   };
 
-  // Title change handler with logging
+  // Title change handler
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value;
-    console.log('Title changed to:', newTitle);
-    setTitle(newTitle);
+    setTitle(e.target.value);
   };
 
-  // Content change handler with logging
-  const handleContentChange = (newContent: string | undefined) => {
-    console.log('Content changed to:', newContent);
-    setContent(newContent || '');
+  // Content change handler (fixes markdown repeat bug)
+  const handleContentChange = (val: string | undefined) => {
+    setContent(val || '');
   };
 
   return (
