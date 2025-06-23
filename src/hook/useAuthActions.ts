@@ -21,3 +21,18 @@ export async function signOut() {
   await supabase.auth.signOut();
   window.location.href = '/auth';
 }
+
+export async function getCurrentUserProfile() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user?.id) return null;
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', session.user.id)
+    .single();
+  if (error) {
+    console.error('Profile fetch error:', error.message);
+    return null;
+  }
+  return data;
+}
