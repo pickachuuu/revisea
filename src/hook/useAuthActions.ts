@@ -8,7 +8,8 @@ export async function handleGithubLogin() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: 'http://localhost:3000/auth/callback',
+      redirectTo: 'http://memoforge.vercel.app/dashboard',
+      // redirectTo: 'http://localhost:3000/auth/callback',
     },
   });
 
