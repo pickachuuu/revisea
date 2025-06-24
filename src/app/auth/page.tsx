@@ -5,9 +5,18 @@ import Button from "@/component/ui/Button";
 import Card from "@/component/ui/Card";
 import { GithubIcon, ChromeIcon } from "hugeicons-react";
 import { handleGithubLogin } from "@/hook/useAuthActions";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function AuthPage() {
+export default async function AuthPage() {
+  const supabase = createServerComponentClient({cookies})
+  const { data: {session} } = await supabase.auth.getSession();
   const [error, setError] = useState<string | null>(null);
+
+  if (session){
+    redirect('/dashboard');
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
