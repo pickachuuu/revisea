@@ -135,7 +135,25 @@ export default function NotesPage() {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-          <div className="col-span-full flex justify-center items-center py-12 text-foreground-muted text-lg">Loading notes...</div>
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <Card className="h-40 flex flex-col justify-between rounded-xl border border-border bg-surface">
+                <Card.Header className="pb-2 border-b border-border rounded-t-xl">
+                  <div className="h-5 w-2/3 bg-background-muted rounded mb-2"></div>
+                </Card.Header>
+                <Card.Content className="py-3 flex-1">
+                  <div className="flex flex-wrap gap-2">
+                    <div className="h-4 w-12 bg-background-muted rounded-full"></div>
+                    <div className="h-4 w-8 bg-background-muted rounded-full"></div>
+                  </div>
+                </Card.Content>
+                <Card.Footer className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-border rounded-b-xl pt-2">
+                  <div className="h-4 w-24 bg-background-muted rounded mb-2"></div>
+                  <div className="h-8 w-32 bg-background-muted rounded"></div>
+                </Card.Footer>
+              </Card>
+            </div>
+          ))
         ) : filteredNotes.length === 0 ? (
           <div className="col-span-full flex flex-col items-center py-12 text-foreground-muted text-lg">
             <span>No notes found.</span>
