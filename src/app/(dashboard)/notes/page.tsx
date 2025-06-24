@@ -7,16 +7,25 @@ import CreateNoteButton from '@/component/features/CreateNoteButton';
 import { File01Icon, GoogleGeminiIcon } from 'hugeicons-react';
 import { useEffect, useState } from 'react';
 import { useNoteActions } from '@/hook/useNoteActions';
+import { useFlashcardActions } from '@/hook/useFlashcardActions';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import GenerateFlashCardModal from '@/component/features/modal/GenerateFlashCardModal';
+import { GeminiFlashcard, GeminiResponse } from '@/lib/gemini';
 
 const supabase = createClient();
 
 export default function NotesPage() {
   const { getUserNotes } = useNoteActions();
+  const { saveGeneratedFlashcards } = useFlashcardActions();
   const [notes, setNotes] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
+  const [selectedNote, setSelectedNote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const params = useParams();
   const noteId = params?.noteId as string | undefined;
 
@@ -61,13 +70,69 @@ export default function NotesPage() {
     fetchNote();
   }, [noteId, notes]);
 
+  const handleGenerateFlashcards = (note: any) => {
+    setSelectedNote(note);
+    setIsModalOpen(true);
+  };
+
+  const handleFlashcardsGenerated = async (geminiResponse: GeminiResponse) => {
+    if (!selectedNote) return;
+    
+    setSaving(true);
+    setSaveSuccess(null);
+    try {
+      // Determine difficulty from the first flashcard or default to medium
+      const difficulty = geminiResponse.flashcards[0]?.difficulty || 'medium';
+
+      // Save flashcards to Supabase
+      const setId = await saveGeneratedFlashcards({
+        noteId: selectedNote.id,
+        noteTitle: selectedNote.title,
+        difficulty,
+        geminiResponse
+      });
+
+      console.log('Flashcards saved successfully! Set ID:', setId);
+      setSaveSuccess(`Successfully saved ${geminiResponse.flashcards.length} flashcards!`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(null), 3000);
+      
+    } catch (error) {
+      console.error('Error saving flashcards:', error);
+      setSaveSuccess('Error saving flashcards. Please try again.');
+      setTimeout(() => setSaveSuccess(null), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedNote(null);
+    setSelectedText('');
+  };
+
   return (
+    <>
     <div className="space-y-8">
       <Header 
         title="Notes" 
         description="Organize and manage your study notes"
         children={<CreateNoteButton/>}
       />
+      
+      {/* Success/Error Message */}
+      {saveSuccess && (
+        <div className={`p-4 rounded-md border ${
+          saveSuccess.includes('Error') 
+            ? 'bg-red-50 border-red-200 text-red-600' 
+            : 'bg-green-50 border-green-200 text-green-600'
+        }`}>
+          <p className="text-sm">{saveSuccess}</p>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <div className="col-span-full flex justify-center items-center py-12 text-foreground-muted text-lg">Loading notes...</div>
@@ -111,8 +176,12 @@ export default function NotesPage() {
                     variant="outline"
                     size="lg"
                     className="flex items-center gap-2 text-xs text-accent border-accent hover:bg-accent hover:text-white transition-colors"
-                    disabled
-                    title="Generate flashcards (coming soon)"
+                    title="Generate flashcards from this note"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleGenerateFlashcards(note);
+                    }}
                   >
                     <GoogleGeminiIcon className="w-6 h-6" />
                     Generate Flashcards
@@ -124,5 +193,15 @@ export default function NotesPage() {
         )}
       </div>
     </div>
+
+    <GenerateFlashCardModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        noteContent={selectedNote?.content || ''}  
+        selectedSection={selectedText}
+        onFlashcardsGenerated={handleFlashcardsGenerated}
+        saving={saving}
+      />
+  </>
   );
 }
