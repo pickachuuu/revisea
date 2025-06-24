@@ -13,7 +13,7 @@ export interface GeminiResponse {
 
 export class GeminiService {
   private apiKey: string;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -24,6 +24,10 @@ export class GeminiService {
     count: number = 10,
     difficulty: 'easy' | 'medium' | 'hard' = 'medium'
   ): Promise<GeminiResponse> {
+    if (!this.apiKey || this.apiKey.trim() === '') {
+      throw new Error('API key is required');
+    }
+
     const prompt = this.buildFlashcardPrompt(noteContent, count, difficulty);
     
     try {
@@ -48,10 +52,18 @@ export class GeminiService {
       });
 
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Gemini API error response:', errorText);
+        throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
+      
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        console.error('Unexpected Gemini API response structure:', data);
+        throw new Error('Unexpected response structure from Gemini API');
+      }
+      
       const generatedText = data.candidates[0].content.parts[0].text;
       
       // Parse the response to extract flashcards
