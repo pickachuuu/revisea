@@ -11,7 +11,18 @@ export default function Dashboard() {
   const [user, setUser] = useState<{ full_name?: string; email?: string } | null>(null);
 
   useEffect(() => {
-    getCurrentUserProfile().then(setUser);
+    // Try to load user from localStorage first
+    const cached = localStorage.getItem('dashboardUser');
+    if (cached) {
+      setUser(JSON.parse(cached));
+    }
+    // Always fetch in background to update localStorage
+    getCurrentUserProfile().then((profile) => {
+      if (profile) {
+        setUser(profile);
+        localStorage.setItem('dashboardUser', JSON.stringify(profile));
+      }
+    });
   }, []);
 
   return (
