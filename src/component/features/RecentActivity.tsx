@@ -1,7 +1,11 @@
 import Card from '@/component/ui/Card';
 import { File01Icon, BookOpen01Icon, Clock01Icon } from 'hugeicons-react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
-interface ActivityItem {
+const supabase = createClient();
+
+interface ActivityItemProps {
   id: string;
   type: 'note' | 'flashcard' | 'session';
   title: string;
@@ -10,7 +14,7 @@ interface ActivityItem {
   icon: React.ReactNode;
 }
 
-function ActivityItem({ type, title, description, time, icon }: ActivityItem) {
+function ActivityItem({ type, title, description, time, icon }: ActivityItemProps) {
   const getTypeColor = () => {
     switch (type) {
       case 'note':
@@ -41,41 +45,80 @@ function ActivityItem({ type, title, description, time, icon }: ActivityItem) {
   );
 }
 
+function ActivityItemSkeleton() {
+  return (
+    <div className="flex items-start gap-3 p-3 animate-pulse">
+      <div className="p-2 rounded-lg bg-background-muted w-8 h-8" />
+      <div className="flex-1 min-w-0">
+        <div className="h-4 w-32 bg-background-muted rounded mb-2"></div>
+        <div className="h-3 w-48 bg-background-muted rounded"></div>
+      </div>
+      <div className="w-12 h-4 bg-background-muted rounded" />
+    </div>
+  );
+}
+
 export default function RecentActivity() {
-  const activities: ActivityItem[] = [
-    {
-      id: '1',
-      type: 'note',
-      title: 'JavaScript Fundamentals',
-      description: 'Updated notes on ES6 features',
-      time: '2 hours ago',
-      icon: <File01Icon className="w-4 h-4" />,
-    },
-    {
-      id: '2',
-      type: 'flashcard',
-      title: 'React Hooks',
-      description: 'Created 15 new flashcards',
-      time: '4 hours ago',
-      icon: <BookOpen01Icon className="w-4 h-4" />,
-    },
-    {
-      id: '3',
-      type: 'session',
-      title: 'Math Practice',
-      description: 'Completed 30-minute study session',
-      time: '6 hours ago',
-      icon: <Clock01Icon className="w-4 h-4" />,
-    },
-    {
-      id: '4',
-      type: 'note',
-      title: 'CSS Grid Layout',
-      description: 'Added new section on responsive design',
-      time: '1 day ago',
-      icon: <File01Icon className="w-4 h-4" />,
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState<ActivityItemProps[]>([]);
+
+  useEffect(() => {
+    async function fetchActivities() {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      let userId = session?.user?.id;
+      let items: ActivityItemProps[] = [];
+      if (userId) {
+        // Fetch recent notes
+        const { data: notes } = await supabase
+          .from('notes')
+          .select('id, title, updated_at')
+          .eq('user_id', userId)
+          .order('updated_at', { ascending: false })
+          .limit(3);
+        if (notes) {
+          items = items.concat(notes.map((note: any) => ({
+            id: note.id,
+            type: 'note',
+            title: note.title || 'Untitled Note',
+            description: 'Updated note',
+            time: note.updated_at ? timeAgo(note.updated_at) : '',
+            icon: <File01Icon className="w-4 h-4" />,
+          })));
+        }
+        // Fetch recent flashcards
+        const { data: flashcards } = await supabase
+          .from('flashcards')
+          .select('id, question, updated_at')
+          .eq('user_id', userId)
+          .order('updated_at', { ascending: false })
+          .limit(2);
+        if (flashcards) {
+          items = items.concat(flashcards.map((fc: any) => ({
+            id: fc.id,
+            type: 'flashcard',
+            title: fc.question ? fc.question.slice(0, 32) : 'Flashcard',
+            description: 'Updated flashcard',
+            time: fc.updated_at ? timeAgo(fc.updated_at) : '',
+            icon: <BookOpen01Icon className="w-4 h-4" />,
+          })));
+        }
+      }
+      setActivities(items);
+      setLoading(false);
+    }
+    fetchActivities();
+  }, []);
+
+  function timeAgo(dateString: string) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
 
   return (
     <Card variant="default" size="md" className="bg-surface">
@@ -84,9 +127,14 @@ export default function RecentActivity() {
         <Card.Description>Your latest learning activities</Card.Description>
       </Card.Header>
       <Card.Content className="space-y-2">
-        {activities.map((activity) => (
-          <ActivityItem key={activity.id} {...activity} />
-        ))}
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => <ActivityItemSkeleton key={i} />)
+          : activities.length > 0
+            ? activities.map((activity) => (
+                <ActivityItem key={activity.id} {...activity} />
+              ))
+            : <div className="text-foreground-muted text-sm">No recent activity found.</div>
+        }
       </Card.Content>
     </Card>
   );
