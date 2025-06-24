@@ -65,5 +65,20 @@ export function useNoteActions(){
         return data || [];
     };
 
-    return { createNote, saveNote, getUserNotes };
+    const deleteNote = async (id: string) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) throw new Error('Not authenticated');
+        const { error } = await supabase
+            .from('notes')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', session.user.id);
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
+        return true;
+    };
+
+    return { createNote, saveNote, getUserNotes, deleteNote };
 }
