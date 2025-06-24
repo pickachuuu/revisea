@@ -66,7 +66,7 @@ export default function QuickActions() {
 
   return (
     <Card variant="default" size="md" className="bg-surface">
-      <Card.Header>
+      <Card.Header className='mb-3'>
         <Card.Title>Quick Actions</Card.Title>
         <Card.Description>Quick access to common tasks</Card.Description>
       </Card.Header>
