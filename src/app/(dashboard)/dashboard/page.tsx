@@ -23,7 +23,7 @@ export default function Dashboard() {
           <DashboardStats />
           <RecentActivity />
         </div>
-        <div className="space-y-6">
+        <div className="space-y-6 mt-12">
           <QuickActions />
         </div>
       </div>
