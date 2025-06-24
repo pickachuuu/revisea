@@ -4,7 +4,7 @@ import Header from '@/component/ui/Header';
 import Card from '@/component/ui/Card';
 import Button from '@/component/ui/Button';
 import CreateNoteButton from '@/component/features/CreateNoteButton';
-import { File01Icon, GoogleGeminiIcon } from 'hugeicons-react';
+import { File01Icon, Delete01Icon,GoogleGeminiIcon } from 'hugeicons-react';
 import { useEffect, useState } from 'react';
 import { useNoteActions } from '@/hook/useNoteActions';
 import { useFlashcardActions } from '@/hook/useFlashcardActions';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import GenerateFlashCardModal from '@/component/features/modal/GenerateFlashCardModal';
-import { GeminiFlashcard, GeminiResponse } from '@/lib/gemini';
+import { GeminiResponse } from '@/lib/gemini';
 
 const supabase = createClient();
 
@@ -190,20 +190,39 @@ export default function NotesPage() {
                   <p className="text-xs text-foreground-muted">
                     Modified {note.updated_at ? new Date(note.updated_at).toLocaleString() : ''}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="flex items-center gap-2 text-xs text-accent border-accent hover:bg-accent hover:text-white transition-colors"
-                    title="Generate flashcards from this note"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleGenerateFlashcards(note);
-                    }}
-                  >
-                    <GoogleGeminiIcon className="w-6 h-6" />
-                    Generate Flashcards
-                  </Button>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 text-xs text-accent border-accent hover:bg-accent hover:text-white transition-colors"
+                      title="Generate flashcards from this note"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleGenerateFlashcards(note);
+                      }}
+                    >
+                      <GoogleGeminiIcon className="w-6 h-6" />
+                      Generate Flashcards
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 text-xs text-accent border-accent hover:bg-accent hover:text-white transition-colors"
+                      title="Delete this note"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleGenerateFlashcards(note);
+                      }}
+                    >
+                      <Delete01Icon className="w-6 h-6" />
+                      Delete  
+                    </Button>
+                  </div>
                 </Card.Footer>
               </Card>
             </Link>
