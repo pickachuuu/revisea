@@ -6,6 +6,9 @@ import Header from "@/component/ui/Header";
 import Button from "@/component/ui/Button";
 import { useFlashcardActions } from "@/hook/useFlashcardActions";
 import { Flashcard, FlashcardSet } from "@/lib/database.types";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 export default function FlashcardPage() {
     const params = useParams();
@@ -18,6 +21,8 @@ export default function FlashcardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [progress, setProgress] = useState({ total: 0, mastered: 0, percentage: 0 });
     const [isMarkingMastered, setIsMarkingMastered] = useState(false);
+    const [isLastCard, setIsLastCard] = useState(false);
+    const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
     const { 
         getFlashcardById, 
@@ -36,6 +41,18 @@ export default function FlashcardPage() {
             const flashcardData = await getFlashcardById(flashcardId);
             if (flashcardData) {
                 setFlashcard(flashcardData);
+                
+                // Get all cards to determine current index
+                const { data: allCards } = await supabase
+                    .from('flashcards')
+                    .select('id')
+                    .eq('set_id', flashcardData.set_id)
+                    .order('created_at', { ascending: true });
+                
+                if (allCards) {
+                    const index = allCards.findIndex((card: { id: string }) => card.id === flashcardId);
+                    setCurrentCardIndex(index + 1); // Add 1 to make it 1-based
+                }
                 
                 // Load flashcard set details
                 const setData = await getFlashcardSetById(flashcardData.set_id);
@@ -97,14 +114,14 @@ export default function FlashcardPage() {
         try {
             const nextCard = await getNextCard(flashcard.id, flashcard.set_id);
             if (nextCard) {
+                setIsLastCard(false);
                 router.push(`/flashcards/${nextCard.id}`);
             } else {
-                // If no next card, go back to the flashcard set
-                router.push(`/flashcards`);
+                setIsLastCard(true);
+                setShowAnswer(false);
             }
         } catch (error) {
             console.error('Error navigating to next card:', error);
-            // Fallback: just hide the answer
             setShowAnswer(false);
         }
     }, [flashcard, getNextCard, router]);
@@ -218,9 +235,14 @@ export default function FlashcardPage() {
                                     onClick={handleNextCard}
                                     className="flex-1"
                                 >
-                                    Next Card
+                                    {isLastCard ? "Last Card" : "Next Card"}
                                 </Button>
                             </div>
+                            {isLastCard && (
+                                <p className="text-sm text-foreground-muted mt-4 text-center">
+                                    You've reached the end of this set. Great job! 🎉
+                                </p>
+                            )}
                         </div>
                     )}
 
@@ -247,7 +269,7 @@ export default function FlashcardPage() {
                         ← Previous
                     </Button>
                     <span className="text-sm text-foreground-muted">
-                        Card {flashcard ? flashcard.id.slice(0, 8) : ''} of {progress.total}
+                        Card {currentCardIndex} of {progress.total}
                     </span>
                     <Button 
                         variant="outline" 
