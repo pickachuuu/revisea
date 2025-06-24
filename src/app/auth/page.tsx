@@ -13,8 +13,8 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <Card variant="elevated" size="lg" className="text-center">
-          <Card.Header className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">Sign in</h1>
+          <Card.Header className="space-y-2 my-2">
+            <h1 className="text-3xl font-bold text-foreground">Sign in to Stendhal</h1>
             <p className="text-foreground-muted">Continue with your account</p>
           </Card.Header>
           {error && (
@@ -35,15 +35,17 @@ export default function AuthPage() {
               onClick={handleGithubLogin}
               variant="outline"
               size="lg"
-              className="w-full justify-center"
+              className="w-full justify-center gap-2"
             >
+              <GithubIcon className="w-5 h-5" />
               Continue with GitHub
             </Button>
             <Button
               variant="outline"
               size="lg"
-              className="w-full justify-center"
+              className="w-full justify-center gap-2"
             >
+              <ChromeIcon className="w-5 h-5" />
               Continue with Google
             </Button>
           </Card.Content>
