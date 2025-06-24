@@ -24,7 +24,7 @@ const cormorant = Cormorant_Garamond({
 
 // Metadata
 export const metadata: Metadata = {
-  title: "Stendhal - Smart Learning Platform",
+  title: "MemoForge - Smart Learning Platform",
   description: "Organize your learning with notes and flashcards",
 };
 

@@ -14,7 +14,7 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         <Card variant="elevated" size="lg" className="text-center">
           <Card.Header className="space-y-2 my-2">
-            <h1 className="text-3xl font-bold text-foreground">Sign in to Stendhal</h1>
+            <h1 className="text-3xl font-bold text-foreground">Sign in to MemoForge</h1>
             <p className="text-foreground-muted">Continue with your account</p>
           </Card.Header>
           {error && (

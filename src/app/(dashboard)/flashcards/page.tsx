@@ -9,10 +9,6 @@ import { BookOpen01Icon, Target01Icon } from 'hugeicons-react';
 import { useFlashcardActions } from '@/hook/useFlashcardActions';
 import { FlashcardSet } from '@/lib/database.types';
 
-// export const metadata: Metadata = {
-//   title: 'Flashcards | Stendhal',
-//   description: 'Study with interactive flashcards',
-// };
 
 export default function FlashcardDashboardPage() {
   const router = useRouter();
