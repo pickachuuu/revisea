@@ -26,7 +26,7 @@ export default function FlashcardDashboardPage() {
   const [existingFlashcards, setExistingFlashcards] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | undefined>(undefined);
-  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet, saveGeneratedFlashcards, deleteFlashcardSet } = useFlashcardActions();
+  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet, saveGeneratedFlashcards, deleteFlashcardSet, reforgeFlashcards } = useFlashcardActions();
 
   const loadFlashcardSets = useCallback(async () => {
     setIsLoading(true);
@@ -90,25 +90,22 @@ export default function FlashcardDashboardPage() {
     setIsReforgeModalOpen(true);
   };
 
-  const handleFlashcardsGenerated = async (geminiResponse: GeminiResponse) => {
-    if (!selectedSet || !selectedSet.note_id) return;
+  const handleFlashcardsGenerated = async (geminiResponse: GeminiResponse, action: 'add_more' | 'regenerate') => {
+    if (!selectedSet) return;
     
     setSaving(true);
     setSaveSuccess(undefined);
     try {
-      // Determine difficulty from the first flashcard or default to medium
-      const difficulty = geminiResponse.flashcards[0]?.difficulty || 'medium';
+      // Use the reforge function instead of creating a new set
+      await reforgeFlashcards(
+        selectedSet.id,
+        action,
+        geminiResponse.flashcards
+      );
 
-      // Save flashcards to Supabase
-      const setId = await saveGeneratedFlashcards({
-        noteId: selectedSet.note_id,
-        noteTitle: selectedSet.title,
-        difficulty,
-        geminiResponse
-      });
-
-      console.log('Flashcards saved successfully! Set ID:', setId);
-      setSaveSuccess(`Successfully saved ${geminiResponse.flashcards.length} flashcards!`);
+      console.log('Flashcards reforged successfully!');
+      const actionText = action === 'regenerate' ? 'regenerated' : 'added';
+      setSaveSuccess(`Successfully ${actionText} ${geminiResponse.flashcards.length} flashcards to the set!`);
       
       // Refresh the flashcard sets
       await loadFlashcardSets();
@@ -117,8 +114,8 @@ export default function FlashcardDashboardPage() {
       setTimeout(() => setSaveSuccess(undefined), 3000);
       
     } catch (error) {
-      console.error('Error saving flashcards:', error);
-      setSaveSuccess('Error saving flashcards. Please try again.');
+      console.error('Error reforging flashcards:', error);
+      setSaveSuccess('Error reforging flashcards. Please try again.');
       setTimeout(() => setSaveSuccess(undefined), 3000);
     } finally {
       setSaving(false);
