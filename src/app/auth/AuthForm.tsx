@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Button from '@/component/ui/Button';
 import Card from '@/component/ui/Card';
 import { GithubIcon, ChromeIcon } from 'hugeicons-react';
-import { handleGithubLogin } from '@/hook/useAuthActions';
+import { handleGithubLogin, handleGoogleLogin } from '@/hook/useAuthActions';
 
 export default function AuthForm() {
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +16,14 @@ export default function AuthForm() {
       setError(e?.message || 'An error occurred');
     }
   };
+
+  const handleGoogle = async () => {
+    try{
+      await handleGoogleLogin();
+    } catch (e: any ){
+      setError(e.message || 'An error occured');
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -52,7 +60,7 @@ export default function AuthForm() {
               variant="outline"
               size="lg"
               className="w-full justify-center gap-2"
-              disabled
+              onClick={handleGoogle}
             >
               <ChromeIcon className="w-5 h-5" />
               Continue with Google
