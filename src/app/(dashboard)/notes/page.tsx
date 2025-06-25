@@ -155,12 +155,11 @@ export default function NotesPage() {
             </div>
           ))
         ) : filteredNotes.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center py-12 text-foreground-muted text-lg">
             <Card>
               <Card.Header>
                 <div className="text-center py-8">
                   <BookOpen01Icon className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No flashcard sets yet</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No notes yet</h3>
                   <p className="text-foreground-muted mb-4">
                     Create your first note
                   </p>
@@ -172,7 +171,6 @@ export default function NotesPage() {
                 </div>
               </Card.Header>
             </Card>
-          </div>
         ) : (
           filteredNotes.map((note) => (
             <Link href={`/notes/${note.id}`} key={note.id} className="block h-full">
