@@ -144,6 +144,56 @@ export function useFlashcardActions() {
       }
     };
 
+    // Function to handle reforge operations (add to existing or replace entirely)
+    const reforgeFlashcards = async (
+      existingSetId: string,
+      action: 'add_more' | 'regenerate',
+      flashcards: GeminiFlashcard[]
+    ): Promise<void> => {
+      try {
+        if (action === 'regenerate') {
+          // Delete all existing flashcards in the set
+          const { error: deleteError } = await supabase
+            .from('flashcards')
+            .delete()
+            .eq('set_id', existingSetId);
+
+          if (deleteError) {
+            console.error('Error deleting existing flashcards:', deleteError);
+            throw deleteError;
+          }
+        }
+
+        // Save new flashcards to the existing set
+        await saveFlashcards(existingSetId, null, flashcards);
+
+        // Update the set's total_cards count
+        const { data: existingCards } = await supabase
+          .from('flashcards')
+          .select('id')
+          .eq('set_id', existingSetId);
+
+        const totalCards = existingCards?.length || 0;
+
+        const { error: updateError } = await supabase
+          .from('flashcard_sets')
+          .update({ 
+            total_cards: totalCards,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingSetId);
+
+        if (updateError) {
+          console.error('Error updating flashcard set:', updateError);
+          throw updateError;
+        }
+
+      } catch (error) {
+        console.error('Error in reforge operation:', error);
+        throw error;
+      }
+    };
+
     // Get user's flashcard sets
     const getUserFlashcardSets = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -434,7 +484,8 @@ export function useFlashcardActions() {
       getSetProgress,
       getFirstCardInSet,
       getNextCard,
-      getPreviousCard
+      getPreviousCard,
+      reforgeFlashcards
     };
   }, []); // Empty dependency array since all functions are stable
 }
