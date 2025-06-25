@@ -9,7 +9,19 @@ export async function handleGithubLogin() {
     provider: 'github',
     options: {
       redirectTo: 'http://memoforge.vercel.app/dashboard',
-      // redirectTo: 'http://localhost:3000/auth/callback',
+    },
+  });
+
+  if (error) {
+    console.error('OAuth error:', error.message);
+  }
+}
+
+export async function handleGoogleLogin() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'http://memoforge.vercel.app/dashboard',
     },
   });
 
