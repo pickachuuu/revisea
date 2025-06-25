@@ -5,16 +5,25 @@ import { useRouter } from 'next/navigation';
 import Header from '@/component/ui/Header';
 import Card from '@/component/ui/Card';
 import Button from '@/component/ui/Button';
-import { BookOpen01Icon, Target01Icon } from 'hugeicons-react';
+import { BookOpen01Icon, Target01Icon, RefreshIcon } from 'hugeicons-react';
 import { useFlashcardActions } from '@/hook/useFlashcardActions';
 import { FlashcardSet } from '@/lib/database.types';
+import ReforgeModal from '@/component/features/modal/ReforgeModal';
+import { GeminiResponse } from '@/lib/gemini';
+import { createClient } from '@/utils/supabase/client';
 
+const supabase = createClient();
 
 export default function FlashcardDashboardPage() {
   const router = useRouter();
   const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet } = useFlashcardActions();
+  const [isReforgeModalOpen, setIsReforgeModalOpen] = useState(false);
+  const [selectedSet, setSelectedSet] = useState<FlashcardSet | null>(null);
+  const [existingFlashcards, setExistingFlashcards] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | undefined>(undefined);
+  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet, saveGeneratedFlashcards } = useFlashcardActions();
 
   const loadFlashcardSets = useCallback(async () => {
     setIsLoading(true);
@@ -54,6 +63,71 @@ export default function FlashcardDashboardPage() {
     }
   }, [getFirstCardInSet, router]);
 
+  const handleReforgeFlashcards = async (set: FlashcardSet) => {
+    setSelectedSet(set);
+    
+    // Fetch existing flashcards for this set
+    try {
+      const { data: flashcards, error } = await supabase
+        .from('flashcards')
+        .select('*')
+        .eq('set_id', set.id);
+      
+      if (error) {
+        console.error('Error fetching existing flashcards:', error);
+        setExistingFlashcards([]);
+      } else {
+        setExistingFlashcards(flashcards || []);
+      }
+    } catch (error) {
+      console.error('Error fetching existing flashcards:', error);
+      setExistingFlashcards([]);
+    }
+    
+    setIsReforgeModalOpen(true);
+  };
+
+  const handleFlashcardsGenerated = async (geminiResponse: GeminiResponse) => {
+    if (!selectedSet || !selectedSet.note_id) return;
+    
+    setSaving(true);
+    setSaveSuccess(undefined);
+    try {
+      // Determine difficulty from the first flashcard or default to medium
+      const difficulty = geminiResponse.flashcards[0]?.difficulty || 'medium';
+
+      // Save flashcards to Supabase
+      const setId = await saveGeneratedFlashcards({
+        noteId: selectedSet.note_id,
+        noteTitle: selectedSet.title,
+        difficulty,
+        geminiResponse
+      });
+
+      console.log('Flashcards saved successfully! Set ID:', setId);
+      setSaveSuccess(`Successfully saved ${geminiResponse.flashcards.length} flashcards!`);
+      
+      // Refresh the flashcard sets
+      await loadFlashcardSets();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(undefined), 3000);
+      
+    } catch (error) {
+      console.error('Error saving flashcards:', error);
+      setSaveSuccess('Error saving flashcards. Please try again.');
+      setTimeout(() => setSaveSuccess(undefined), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCloseReforgeModal = () => {
+    setIsReforgeModalOpen(false);
+    setSelectedSet(null);
+    setExistingFlashcards([]);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -73,6 +147,7 @@ export default function FlashcardDashboardPage() {
   }
 
   return (
+    <>
     <div className="space-y-8">
       <Header 
         title="Flashcards" 
@@ -90,6 +165,17 @@ export default function FlashcardDashboardPage() {
           </div>
         }
       />
+      
+      {/* Success/Error Message */}
+      {saveSuccess && (
+        <div className={`p-4 rounded-md border ${
+          saveSuccess.includes('Error') 
+            ? 'bg-red-50 border-red-200 text-red-600' 
+            : 'bg-green-50 border-green-200 text-green-600'
+        }`}>
+          <p className="text-sm">{saveSuccess}</p>
+        </div>
+      )}
       
       {flashcardSets.length === 0 ? (
         <Card>
@@ -154,10 +240,25 @@ export default function FlashcardDashboardPage() {
                 </Card.Content>
                 <Card.Footer>
                   <div className="flex justify-between items-center w-full">
-                    <p className="text-xs text-foreground-muted">
-                      Updated {lastStudied}
-                    </p>
-                    <Button 
+                    <div>
+                      <p className="text-xs text-foreground-muted">
+                        Updated {lastStudied}
+                      </p>
+                    </div>
+                    
+                    <div className='flex gap-1  '>
+                    <Button
+                      size="sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReforgeFlashcards(set);
+                      }}
+                    >
+                      <RefreshIcon className="w-4 h-4 mr-1" />
+                      Reforge
+                    </Button>
+
+                    <Button
                       size="sm" 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -165,8 +266,9 @@ export default function FlashcardDashboardPage() {
                       }}
                     >
                       <Target01Icon className="w-4 h-4 mr-1" />
-                      Study
+                      Delete
                     </Button>
+                    </div>
                   </div>
                 </Card.Footer>
               </Card>
@@ -175,5 +277,15 @@ export default function FlashcardDashboardPage() {
         </div>
       )}
     </div>
+
+    <ReforgeModal
+        isOpen={isReforgeModalOpen}
+        onClose={handleCloseReforgeModal}
+        noteContent={selectedSet?.description || ''}  
+        existingFlashcards={existingFlashcards}
+        onFlashcardsGenerated={handleFlashcardsGenerated}
+        saving={saving}
+      />
+    </>
   );
 }
