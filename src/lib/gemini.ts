@@ -22,13 +22,14 @@ export class GeminiService {
   async generateFlashcards(
     noteContent: string,
     count: number = 10,
-    difficulty: 'easy' | 'medium' | 'hard' = 'medium'
+    difficulty: 'easy' | 'medium' | 'hard' = 'medium',
+    context?: string
   ): Promise<GeminiResponse> {
     if (!this.apiKey || this.apiKey.trim() === '') {
       throw new Error('API key is required');
     }
 
-    const prompt = this.buildFlashcardPrompt(noteContent, count, difficulty);
+    const prompt = this.buildFlashcardPrompt(noteContent, count, difficulty, context);
     
     try {
       const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
@@ -87,13 +88,18 @@ export class GeminiService {
   private buildFlashcardPrompt(
     noteContent: string,
     count: number,
-    difficulty: 'easy' | 'medium' | 'hard'
+    difficulty: 'easy' | 'medium' | 'hard',
+    context?: string
   ): string {
-    return `You are an expert educator creating flashcards from study notes. 
+    let prompt = `You are an expert educator creating flashcards from study notes. 
 
-Please create ${count} high-quality flashcards from the following note content. The flashcards should be at a ${difficulty} difficulty level.
+Please create ${count} high-quality flashcards from the following note content. The flashcards should be at a ${difficulty} difficulty level.`;
 
-Note Content:
+    if (context) {
+      prompt += `\n\n${context}`;
+    }
+
+    prompt += `\n\nNote Content:
 ${noteContent}
 
 Instructions:
@@ -111,6 +117,8 @@ Instructions:
 ]
 
 Please ensure the JSON is valid and properly formatted.`;
+
+    return prompt;
   }
 
   private parseFlashcardResponse(response: string): GeminiFlashcard[] {
