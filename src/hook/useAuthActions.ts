@@ -8,7 +8,7 @@ export async function handleGithubLogin() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: 'http://memoforge.vercel.app/dashboard',
+      redirectTo: `${window.location.origin}/auth/callback`,
     },
   });
 
@@ -21,7 +21,7 @@ export async function handleGoogleLogin() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'http://memoforge.vercel.app/dashboard',
+      redirectTo: `${window.location.origin}/auth/callback`,
     },
   });
 
