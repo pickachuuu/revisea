@@ -133,9 +133,9 @@ export default function NotesPage() {
         </div>
       )}
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          Array.from({ length: 6 }).map((_, i) => (
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="animate-pulse">
               <Card className="h-40 flex flex-col justify-between rounded-xl border border-border bg-surface">
                 <Card.Header className="pb-2 border-b border-border rounded-t-xl">
@@ -153,26 +153,28 @@ export default function NotesPage() {
                 </Card.Footer>
               </Card>
             </div>
-          ))
-        ) : filteredNotes.length === 0 ? (
-            <Card>
-              <Card.Header>
-                <div className="text-center py-8">
-                  <BookOpen01Icon className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No notes yet</h3>
-                  <p className="text-foreground-muted mb-4">
-                    Create your first note
-                  </p>
-                  <CreateNoteButton/>
-                  {/* <Button onClick={handleCreate}>
-                    <BookOpen01Icon className="w-4 h-4 mr-2" />
-                    Create Your First Note
-                  </Button> */}
-                </div>
-              </Card.Header>
-            </Card>
-        ) : (
-          filteredNotes.map((note) => (
+          ))}
+        </div>
+      ) : filteredNotes.length === 0 ? (
+        <Card>
+          <Card.Header>
+            <div className="text-center py-8">
+              <BookOpen01Icon className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No notes yet</h3>
+              <p className="text-foreground-muted mb-4">
+                Create your first note
+              </p>
+              <CreateNoteButton/>
+              {/* <Button onClick={handleCreate}>
+                <BookOpen01Icon className="w-4 h-4 mr-2" />
+                Create Your First Note
+              </Button> */}
+            </div>
+          </Card.Header>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredNotes.map((note) => (
             <Link href={`/notes/${note.id}`} key={note.id} className="block h-full">
               <Card
                 variant="elevated"
@@ -239,9 +241,9 @@ export default function NotesPage() {
                 </Card.Footer>
               </Card>
             </Link>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
 
     <GenerateFlashCardModal
