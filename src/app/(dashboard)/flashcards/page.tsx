@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import Header from '@/component/ui/Header';
 import Card from '@/component/ui/Card';
 import Button from '@/component/ui/Button';
-import { BookOpen01Icon, Target01Icon, RefreshIcon } from 'hugeicons-react';
+import { BookOpen01Icon, Target01Icon, RefreshIcon, File01Icon } from 'hugeicons-react';
 import { useFlashcardActions } from '@/hook/useFlashcardActions';
 import { FlashcardSet } from '@/lib/database.types';
 import ReforgeModal from '@/component/features/modal/ReforgeModal';
+import ConfirmDeleteModal from '@/component/features/modal/ConfirmDeleteModal';
 import { GeminiResponse } from '@/lib/gemini';
 import { createClient } from '@/utils/supabase/client';
+import { redirect } from 'next/navigation';
 
 const supabase = createClient();
 
@@ -19,11 +21,12 @@ export default function FlashcardDashboardPage() {
   const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReforgeModalOpen, setIsReforgeModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSet, setSelectedSet] = useState<FlashcardSet | null>(null);
   const [existingFlashcards, setExistingFlashcards] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | undefined>(undefined);
-  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet, saveGeneratedFlashcards } = useFlashcardActions();
+  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet, saveGeneratedFlashcards, deleteFlashcardSet } = useFlashcardActions();
 
   const loadFlashcardSets = useCallback(async () => {
     setIsLoading(true);
@@ -128,6 +131,31 @@ export default function FlashcardDashboardPage() {
     setExistingFlashcards([]);
   };
 
+  const handleDeleteFlashcardSet = (set: FlashcardSet) => {
+    setSelectedSet(set);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedSet) return;
+    
+    try {
+      await deleteFlashcardSet(selectedSet.id);
+      
+      // Remove the set from the local state
+      setFlashcardSets(prevSets => prevSets.filter(set => set.id !== selectedSet.id));
+      
+      // Show success message
+      setSaveSuccess('Flashcard set deleted successfully!');
+      setTimeout(() => setSaveSuccess(undefined), 3000);
+      
+    } catch (error) {
+      console.error('Error deleting flashcard set:', error);
+      setSaveSuccess('Error deleting flashcard set. Please try again.');
+      setTimeout(() => setSaveSuccess(undefined), 3000);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -154,13 +182,11 @@ export default function FlashcardDashboardPage() {
         description="Study with interactive flashcards"
         children={
           <div className="flex gap-2">
-            <Button variant="outline">
-              <BookOpen01Icon className="w-4 h-4 mr-2" />
-              Browse Sets
-            </Button>
-            <Button>
-              <BookOpen01Icon className="w-4 h-4 mr-2" />
-              Create Set
+            <Button
+             onClick={()=>{redirect('/notes')}}
+            >
+              <File01Icon className="w-4 h-4 mr-2" />
+              Forge from notes
             </Button>
           </div>
         }
@@ -187,7 +213,7 @@ export default function FlashcardDashboardPage() {
                 Create your first flashcard set to start studying
               </p>
               <Button>
-                <BookOpen01Icon className="w-4 h-4 mr-2" />
+                <File01Icon className="w-4 h-4 mr-2" />
                 Create Your First Set
               </Button>
             </div>
@@ -262,7 +288,7 @@ export default function FlashcardDashboardPage() {
                       size="sm" 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleStartSession(set.id);
+                        handleDeleteFlashcardSet(set);
                       }}
                     >
                       <Target01Icon className="w-4 h-4 mr-1" />
@@ -285,6 +311,16 @@ export default function FlashcardDashboardPage() {
         existingFlashcards={existingFlashcards}
         onFlashcardsGenerated={handleFlashcardsGenerated}
         saving={saving}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Flashcard Set"
+        description="Are you sure you want to delete this flashcard set? This action cannot be undone."
+        itemName={selectedSet?.title || 'Untitled Set'}
+        itemType="flashcard set"
       />
     </>
   );
