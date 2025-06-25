@@ -11,7 +11,7 @@ export interface ReforgeModalProps {
   onClose: () => void;
   noteContent: string;
   existingFlashcards: GeminiFlashcard[];
-  onFlashcardsGenerated?: (geminiResponse: GeminiResponse) => void;
+  onFlashcardsGenerated?: (geminiResponse: GeminiResponse, action: 'add_more' | 'regenerate') => void;
   selectedSection?: string;
   saving?: boolean;
 }
@@ -150,7 +150,7 @@ export default function ReforgeModal({
           total_tokens: response.total_tokens,
           cost_cents: response.cost_cents
         };
-        onFlashcardsGenerated?.(finalResponse);
+        onFlashcardsGenerated?.(finalResponse, settings.action);
         onClose();
       }
     } catch (error) {
@@ -170,7 +170,7 @@ export default function ReforgeModal({
       cost_cents: 0
     };
     
-    onFlashcardsGenerated?.(finalResponse);
+    onFlashcardsGenerated?.(finalResponse, settings.action);
     setShowPreview(false);
     onClose();
   }, [generatedFlashcards, onFlashcardsGenerated, onClose, existingFlashcards, settings.action]);
