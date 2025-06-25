@@ -12,15 +12,17 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import GenerateFlashCardModal from '@/component/features/modal/GenerateFlashCardModal';
+import ConfirmDeleteModal from '@/component/features/modal/ConfirmDeleteModal';
 import { GeminiResponse } from '@/lib/gemini';
 
 const supabase = createClient();
 
 export default function NotesPage() {
-  const { getUserNotes } = useNoteActions();
+  const { getUserNotes, deleteNote } = useNoteActions();
   const { saveGeneratedFlashcards } = useFlashcardActions();
   const [notes, setNotes] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [selectedNote, setSelectedNote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -94,6 +96,31 @@ export default function NotesPage() {
   const handleGenerateFlashcards = (note: any) => {
     setSelectedNote(note);
     setIsModalOpen(true);
+  };
+
+  const handleDeleteNote = (note: any) => {
+    setSelectedNote(note);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedNote) return;
+    
+    try {
+      await deleteNote(selectedNote.id);
+      
+      // Remove the note from the local state
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== selectedNote.id));
+      
+      // Show success message
+      setSaveSuccess('Note deleted successfully!');
+      setTimeout(() => setSaveSuccess(null), 3000);
+      
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      setSaveSuccess('Error deleting note. Please try again.');
+      setTimeout(() => setSaveSuccess(null), 3000);
+    }
   };
 
   const handleFlashcardsGenerated = async (geminiResponse: GeminiResponse) => {
@@ -250,7 +277,7 @@ export default function NotesPage() {
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        handleGenerateFlashcards(note);
+                        handleDeleteNote(note);
                       }}
                     >
                       <Delete01Icon className="w-6 h-6" />
@@ -273,6 +300,16 @@ export default function NotesPage() {
         onFlashcardsGenerated={handleFlashcardsGenerated}
         saving={saving}
       />
+
+    <ConfirmDeleteModal
+      isOpen={isDeleteModalOpen}
+      onClose={() => setIsDeleteModalOpen(false)}
+      onConfirm={handleConfirmDelete}
+      title="Delete Note"
+      description="Are you sure you want to delete this note? This action cannot be undone."
+      itemName={selectedNote?.title || 'Untitled Note'}
+      itemType="note"
+    />
   </>
   );
 }
