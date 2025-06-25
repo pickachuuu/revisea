@@ -61,6 +61,13 @@ export async function updateSession(
       url.pathname = '/auth';
       return NextResponse.redirect(url);
     }
+
+    // If user is authenticated and trying to access auth page, redirect to dashboard
+    if (user && request.nextUrl.pathname === '/auth') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
   } catch (error) {
     console.error('Unexpected error in middleware:', error);
     // On any unexpected error, redirect to auth
