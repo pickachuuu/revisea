@@ -37,17 +37,38 @@ export async function updateSession(
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    request.nextUrl.pathname !== '/auth'
-  ) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth';
-    return NextResponse.redirect(url);
+    if (error) {
+      console.log('Auth error in middleware:', error.message);
+      // If there's an auth error, clear the session and redirect to auth
+      if (request.nextUrl.pathname !== '/auth') {
+        const url = request.nextUrl.clone();
+        url.pathname = '/auth';
+        return NextResponse.redirect(url);
+      }
+    }
+
+    if (
+      !user &&
+      request.nextUrl.pathname !== '/auth'
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/auth';
+      return NextResponse.redirect(url);
+    }
+  } catch (error) {
+    console.error('Unexpected error in middleware:', error);
+    // On any unexpected error, redirect to auth
+    if (request.nextUrl.pathname !== '/auth') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/auth';
+      return NextResponse.redirect(url);
+    }
   }
   
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

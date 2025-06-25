@@ -1,7 +1,7 @@
 import { updateSession } from './utils/supabase/middleware'
 import { NextRequest } from 'next/server'
 
-export const config = {
+export const config = {  
   matcher: [
     // Protect all routes except for public paths and static files
     '/((?!_next/static|_next/image|favicon.ico|auth|api|public|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
