@@ -30,13 +30,34 @@ export default function NotesPage() {
   const noteId = params?.noteId as string | undefined;
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      setLoading(true);
-      const data = await getUserNotes();
-      setNotes(data);
-      setLoading(false);
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Session check:', { session: !!session, error: error?.message });
+        
+        if (error) {
+          console.error('Auth error:', error);
+          window.location.href = '/auth';
+          return;
+        }
+        
+        if (!session) {
+          console.log('No session found, redirecting to auth');
+          window.location.href = '/auth';
+          return;
+        }
+        
+        // If we have a session, fetch notes
+        const data = await getUserNotes();
+        setNotes(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error in checkAuth:', error);
+        window.location.href = '/auth';
+      }
     };
-    fetchNotes();
+    
+    checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -209,9 +230,8 @@ export default function NotesPage() {
                   {/* Action buttons */}
                   <div className="flex gap-1">
                     <Button
-                      variant="outline"
                       size="sm"
-                      className="flex items-center gap-2 text-xs text-accent border-accent hover:bg-accent hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-xs"
                       title="Generate flashcards from this note"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -220,13 +240,12 @@ export default function NotesPage() {
                       }}
                     >
                       <GoogleGeminiIcon className="w-6 h-6" />
-                      Generate Flashcards
+                      Forge
                     </Button>
 
                     <Button
-                      variant="outline"
                       size="sm"
-                      className="flex items-center gap-2 text-xs text-accent border-accent hover:bg-accent hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-xs"
                       title="Delete this note"
                       onClick={(e) => {
                         e.stopPropagation();
