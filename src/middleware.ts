@@ -9,7 +9,6 @@ export const config = {
 }
 
 export async function middleware(request: NextRequest) {
-  console.log('MIDDLEWARE EXECUTED:', request.nextUrl.pathname);
   return await updateSession(
     request,
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
