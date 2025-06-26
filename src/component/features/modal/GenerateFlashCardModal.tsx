@@ -29,7 +29,7 @@ const DIFFICULTY_OPTIONS = [
   { value: 'all', label: 'All levels' },
 ];
 
-const MAX_FLASHCARDS = 50;
+const MAX_FLASHCARDS = 30;
 const DEFAULT_SETTINGS: GenerationSettings = {
   minCount: 5,
   difficulty: 'medium',
@@ -203,7 +203,7 @@ export default function GenerateFlashCardModal({
                 disabled={isLoading}
               />
               <p className="text-xs text-foreground-muted">
-                Maximum allowed: {MAX_FLASHCARDS} cards
+                Maximum per generate: {MAX_FLASHCARDS} cards
               </p>
             </div>
 
