@@ -66,6 +66,7 @@ export class GeminiService {
       }
       
       const generatedText = data.candidates[0].content.parts[0].text;
+      console.log('[Gemini] Raw response text:', generatedText);
       
       // Parse the response to extract flashcards
       const flashcards = this.parseFlashcardResponse(generatedText);
@@ -116,8 +117,9 @@ Instructions:
   }
 ]
 
-Please ensure the JSON is valid and properly formatted.`;
-
+Please ensure the JSON is valid and properly formatted.
+IMPORTANT: Do not wrap the JSON in \`\`\`json or add any prefix/suffix.
+Do not include any additional text outside the JSON array.`;
     return prompt;
   }
 
@@ -129,6 +131,7 @@ Please ensure the JSON is valid and properly formatted.`;
         throw new Error('No valid JSON found in response');
       }
 
+      console.log(response);
       const flashcards = JSON.parse(jsonMatch[0]);
       
       // Validate the structure
