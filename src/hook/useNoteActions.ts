@@ -24,9 +24,6 @@ export function useNoteActions(){
     const saveNote = async (id: string, { title, content, tags }: { title: string, content: string, tags: string[] }) => {
         if (!title) return;
 
-        // Add console.log to debug
-        console.log('Saving to Supabase:', { id, title, content, tags });
-
         const { data: { session } } = await supabase.auth.getSession();
         
         const { data, error } = await supabase

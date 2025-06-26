@@ -56,16 +56,13 @@ export default function NewNotePage() {
   useEffect(() => {
     const handleCreateNote = async () => {
       if (!id && title.trim()) {
-        console.log('Creating new note...');
         try {
           const newId = await createNote();
-          console.log('Created note with ID:', newId);
           if (newId) {
             setId(newId);
             setSaveStatus('saved');
           }
         } catch (error) {
-          console.error('Error creating note:', error);
           setSaveStatus('error');
         }
       }

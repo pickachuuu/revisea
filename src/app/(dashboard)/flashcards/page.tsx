@@ -103,7 +103,6 @@ export default function FlashcardDashboardPage() {
         geminiResponse.flashcards
       );
 
-      console.log('Flashcards reforged successfully!');
       const actionText = action === 'regenerate' ? 'regenerated' : 'added';
       setSaveSuccess(`Successfully ${actionText} ${geminiResponse.flashcards.length} flashcards to the set!`);
       

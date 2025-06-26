@@ -44,8 +44,6 @@ export async function updateSession(
     } = await supabase.auth.getUser()
 
     if (error) {
-      console.log('Auth error in middleware:', error.message);
-      // If there's an auth error, clear the session and redirect to auth
       if (request.nextUrl.pathname !== '/auth') {
         const url = request.nextUrl.clone();
         url.pathname = '/auth';

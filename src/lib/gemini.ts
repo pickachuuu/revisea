@@ -66,7 +66,6 @@ export class GeminiService {
       }
       
       const generatedText = data.candidates[0].content.parts[0].text;
-      console.log('[Gemini] Raw response text:', generatedText);
       
       // Parse the response to extract flashcards
       const flashcards = this.parseFlashcardResponse(generatedText);
@@ -131,7 +130,6 @@ Do not include any additional text outside the JSON array.`;
         throw new Error('No valid JSON found in response');
       }
 
-      console.log(response);
       const flashcards = JSON.parse(jsonMatch[0]);
       
       // Validate the structure

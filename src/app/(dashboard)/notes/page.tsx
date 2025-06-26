@@ -35,7 +35,6 @@ export default function NotesPage() {
     const checkAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Session check:', { session: !!session, error: error?.message });
         
         if (error) {
           console.error('Auth error:', error);
@@ -44,7 +43,6 @@ export default function NotesPage() {
         }
         
         if (!session) {
-          console.log('No session found, redirecting to auth');
           window.location.href = '/auth';
           return;
         }
@@ -140,7 +138,6 @@ export default function NotesPage() {
         geminiResponse
       });
 
-      console.log('Flashcards saved successfully! Set ID:', setId);
       setSaveSuccess(`Successfully saved ${geminiResponse.flashcards.length} flashcards!`);
       
       // Clear success message after 3 seconds
