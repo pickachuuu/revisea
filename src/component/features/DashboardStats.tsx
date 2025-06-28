@@ -1,5 +1,5 @@
 import Card from '@/component/ui/Card';
-import { File01Icon, BookOpen01Icon, Target01Icon, ArrowUp01Icon } from 'hugeicons-react';
+import { File01Icon, BookOpen01Icon, Target01Icon, TickDouble01Icon } from 'hugeicons-react';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
@@ -11,6 +11,16 @@ interface StatCardProps {
   icon: React.ReactNode;
   trend?: string;
   trendDirection?: 'up' | 'down';
+}
+
+interface FlashcardSet {
+  id: string;
+  total_cards: number;
+  mastered_cards: number;
+  flashcards: Array<{
+    id: string;
+    status: string;
+  }>;
 }
 
 function StatCardSkeleton() {
@@ -36,11 +46,6 @@ function StatCard({ title, value, icon, trend, trendDirection }: StatCardProps) 
           <p className="text-2xl font-bold text-foreground">{value}</p>
           {trend && (
             <div className="flex items-center gap-1">
-              <ArrowUp01Icon 
-                className={`w-4 h-4 ${
-                  trendDirection === 'up' ? 'text-green-500' : 'text-red-500'
-                }`} 
-              />
               <span className={`text-sm ${
                 trendDirection === 'up' ? 'text-green-500' : 'text-red-500'
               }`}>
@@ -62,48 +67,100 @@ export default function DashboardStats() {
   const [stats, setStats] = useState<StatCardProps[]>([
     { title: 'Total Notes', value: 0, icon: <File01Icon className="w-5 h-5 text-accent" />, trend: '', trendDirection: 'up' },
     { title: 'Flashcards', value: 0, icon: <BookOpen01Icon className="w-5 h-5 text-accent" />, trend: '', trendDirection: 'up' },
-    { title: 'Study Sessions', value: 0, icon: <Target01Icon className="w-5 h-5 text-accent" />, trend: '', trendDirection: 'up' },
-    { title: 'Streak Days', value: 0, icon: <ArrowUp01Icon className="w-5 h-5 text-accent" /> },
+    { title: 'Flashcard Sets', value: 0, icon: <Target01Icon className="w-5 h-5 text-accent" />, trend: '', trendDirection: 'up' },
+    { title: 'Mastered Cards', value: 0, icon: <span className="w-5 h-5 text-accent text-xl">✓</span> },
   ]);
 
   useEffect(() => {
     async function fetchStats() {
       setLoading(true);
-      // Fetch notes count
       const { data: { session } } = await supabase.auth.getSession();
       let userId = session?.user?.id;
-      let noteCount = 0;
-      let flashcardCount = 0;
-      if (userId) {
+      
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch notes count
         const { count: notesCount } = await supabase
           .from('notes')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', userId);
-        noteCount = notesCount || 0;
-        // Get all flashcard set IDs for this user
-        const { data: sets } = await supabase
+        
+        // Fetch flashcard sets and their data
+        const { data: flashcardSets } = await supabase
           .from('flashcard_sets')
-          .select('id')
+          .select(`
+            id,
+            total_cards,
+            mastered_cards,
+            flashcards (
+              id,
+              status
+            )
+          `)
           .eq('user_id', userId);
-        const setIds = sets ? sets.map((s: any) => s.id) : [];
-        if (setIds.length > 0) {
-          const { count: flashcardsCount } = await supabase
-            .from('flashcards')
-            .select('*', { count: 'exact', head: true })
-            .in('set_id', setIds);
-          flashcardCount = flashcardsCount || 0;
-        } else {
-          flashcardCount = 0;
+
+        let totalFlashcardSets = 0;
+        let totalFlashcards = 0;
+        let totalMasteredCards = 0;
+        let fullyMasteredSets = 0;
+
+        if (flashcardSets) {
+          totalFlashcardSets = flashcardSets.length;
+          
+          // Calculate totals and check for fully mastered sets
+          flashcardSets.forEach((set: FlashcardSet) => {
+            totalFlashcards += set.total_cards || 0;
+            totalMasteredCards += set.mastered_cards || 0;
+            
+            // Check if all cards in this set are mastered
+            if (set.flashcards && set.flashcards.length > 0) {
+              const allMastered = set.flashcards.every((card) => card.status === 'mastered');
+              if (allMastered) {
+                fullyMasteredSets++;
+              }
+            }
+          });
         }
+
+        setStats([
+          { 
+            title: 'Total Notes', 
+            value: notesCount || 0, 
+            icon: <File01Icon className="w-5 h-5 text-accent" />, 
+            trend: '', 
+            trendDirection: 'up' as const 
+          },
+          { 
+            title: 'Flashcards', 
+            value: totalFlashcards, 
+            icon: <BookOpen01Icon className="w-5 h-5 text-accent" />, 
+            trend: '', 
+            trendDirection: 'up' as const 
+          },
+          { 
+            title: 'Flashcard Sets', 
+            value: totalFlashcardSets, 
+            icon: <Target01Icon className="w-5 h-5 text-accent" />, 
+            trend: fullyMasteredSets > 0 ? `${fullyMasteredSets} completed` : '', 
+            trendDirection: 'up' as const 
+          },
+          { 
+            title: 'Mastered Cards', 
+            value: totalMasteredCards, 
+            icon: <TickDouble01Icon className="w-5 h-5 text-accent" />, 
+          },
+        ]);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setLoading(false);
       }
-      setStats([
-        { title: 'Total Notes', value: noteCount, icon: <File01Icon className="w-5 h-5 text-accent" />, trend: '', trendDirection: 'up' as const },
-        { title: 'Flashcards', value: flashcardCount, icon: <BookOpen01Icon className="w-5 h-5 text-accent" />, trend: '', trendDirection: 'up' as const },
-        { title: 'Study Sessions', value: 0, icon: <Target01Icon className="w-5 h-5 text-accent" />, trend: '', trendDirection: 'up' as const },
-        { title: 'Streak Days', value: 0, icon: <ArrowUp01Icon className="w-5 h-5 text-accent" /> },
-      ]);
-      setLoading(false);
     }
+    
     fetchStats();
   }, []);
 
