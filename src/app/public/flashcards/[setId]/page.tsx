@@ -140,6 +140,7 @@ export default function PublicFlashcardSetPage() {
   const currentCard = flashcards[currentCardIndex];
 
   return (
+    <div className='px-12 py-8'>
     <div className="space-y-6">
       <Header title="Shared Flashcard Set" />
       
@@ -251,5 +252,6 @@ export default function PublicFlashcardSetPage() {
         </Card>
       )}
     </div>
+  </div>
   );
 } 
