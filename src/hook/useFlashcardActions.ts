@@ -458,10 +458,17 @@ export function useFlashcardActions() {
 
     // Delete a flashcard set and all its cards
     const deleteFlashcardSet = async (setId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('flashcard_sets')
         .delete()
-        .eq('id', setId);
+        .eq('id', setId)
+        .eq('user_id', session.user.id);
 
       if (error) {
         console.error('Error deleting flashcard set:', error);
@@ -469,15 +476,75 @@ export function useFlashcardActions() {
       }
     };
 
+    // Toggle public status of flashcard set
+    const togglePublicStatus = async (setId: string, isPublic: boolean) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const { error } = await supabase
+        .from('flashcard_sets')
+        .update({ is_public: isPublic })
+        .eq('id', setId)
+        .eq('user_id', session.user.id);
+
+      if (error) {
+        console.error('Error updating flashcard set public status:', error);
+        throw error;
+      }
+    };
+
+    // Get public flashcard set by ID (for public viewing)
+    const getPublicFlashcardSet = async (setId: string) => {
+      const { data, error } = await supabase
+        .from('flashcard_sets')
+        .select(`
+          id,
+          title,
+          description,
+          total_cards,
+          user_id,
+          created_at,
+          profiles!inner(full_name)
+        `)
+        .eq('id', setId)
+        .eq('is_public', true)
+        .single();
+
+      if (error) {
+        console.error('Error fetching public flashcard set:', error);
+        throw error;
+      }
+
+      return data;
+    };
+
+    // Get public flashcards by set ID
+    const getPublicFlashcards = async (setId: string) => {
+      const { data, error } = await supabase
+        .from('flashcards')
+        .select('id, question, answer, difficulty_level')
+        .eq('set_id', setId)
+        .order('created_at');
+
+      if (error) {
+        console.error('Error fetching public flashcards:', error);
+        throw error;
+      }
+
+      return data || [];
+    };
+
     return {
+      createFlashcardSet,
+      saveFlashcards,
       saveGeneratedFlashcards,
+      reforgeFlashcards,
       getUserFlashcardSets,
       getFlashcardsBySet,
       updateFlashcardStatus,
-      deleteFlashcardSet,
-      createFlashcardSet,
-      saveFlashcards,
-      logGeminiRequest,
       getFlashcardById,
       getFlashcardSetById,
       markFlashcardAsMastered,
@@ -485,7 +552,10 @@ export function useFlashcardActions() {
       getFirstCardInSet,
       getNextCard,
       getPreviousCard,
-      reforgeFlashcards
+      deleteFlashcardSet,
+      togglePublicStatus,
+      getPublicFlashcardSet,
+      getPublicFlashcards
     };
   }, []); // Empty dependency array since all functions are stable
 }
