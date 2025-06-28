@@ -79,6 +79,7 @@ export type Database = {
           description: string | null
           total_cards: number
           mastered_cards: number
+          is_public: boolean
           created_at: string
           updated_at: string
         }
@@ -90,6 +91,7 @@ export type Database = {
           description?: string | null
           total_cards?: number
           mastered_cards?: number
+          is_public?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -101,6 +103,7 @@ export type Database = {
           description?: string | null
           total_cards?: number
           mastered_cards?: number
+          is_public?: boolean
           created_at?: string
           updated_at?: string
         }
