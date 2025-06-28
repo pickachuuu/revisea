@@ -121,7 +121,6 @@ export default function PublicFlashcardSetPage() {
   if (error || !set) {
     return (
       <div className="space-y-6">
-        <Header title="Flashcard Set Not Found" />
         <Card variant="elevated" className="text-center py-12">
           <div className="space-y-4">
             <p className="text-foreground-muted">{error || 'This flashcard set is not available for public viewing.'}</p>
@@ -140,9 +139,14 @@ export default function PublicFlashcardSetPage() {
   const currentCard = flashcards[currentCardIndex];
 
   return (
-    <div className='px-12 py-8'>
+    <div className='px-12'>
+      <div className='flex justify-between item-center my-5'>
+        <Link href={`${window.location.origin}/dashboard`}>
+          <Header title="MemoForge" />
+        </Link>
+
+      </div>
     <div className="space-y-6">
-      <Header title="Shared Flashcard Set" />
       
       {/* Set Info */}
       <Card variant="elevated" className="rounded-xl border border-border bg-surface shadow-sm">
