@@ -272,7 +272,7 @@ export default function FlashcardDashboardPage() {
                 className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleCardClick(set.id)}
               >
-                <Card.Header>
+                <Card.Header className='min-h-20'>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
