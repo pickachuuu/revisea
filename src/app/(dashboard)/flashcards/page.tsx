@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/component/ui/Header';
 import Card from '@/component/ui/Card';
 import Button from '@/component/ui/Button';
-import { BookOpen01Icon, Target01Icon, RefreshIcon, File01Icon } from 'hugeicons-react';
+import { BookOpen01Icon, Target01Icon, RefreshIcon, File01Icon, Share01Icon } from 'hugeicons-react';
 import { useFlashcardActions } from '@/hook/useFlashcardActions';
 import { FlashcardSet } from '@/lib/database.types';
 import ReforgeModal from '@/component/features/modal/ReforgeModal';
@@ -26,7 +26,8 @@ export default function FlashcardDashboardPage() {
   const [existingFlashcards, setExistingFlashcards] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | undefined>(undefined);
-  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet, saveGeneratedFlashcards, deleteFlashcardSet, reforgeFlashcards } = useFlashcardActions();
+  const [shareLinkCopied, setShareLinkCopied] = useState<string | null>(null);
+  const { getUserFlashcardSets, getSetProgress, getFirstCardInSet, saveGeneratedFlashcards, deleteFlashcardSet, reforgeFlashcards, togglePublicStatus } = useFlashcardActions();
 
   const loadFlashcardSets = useCallback(async () => {
     setIsLoading(true);
@@ -152,6 +153,48 @@ export default function FlashcardDashboardPage() {
     }
   };
 
+  const handleToggleSharing = async (set: FlashcardSet, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      const newPublicStatus = !set.is_public;
+      await togglePublicStatus(set.id, newPublicStatus);
+      
+      // Update local state
+      setFlashcardSets(prevSets => 
+        prevSets.map(s => 
+          s.id === set.id ? { ...s, is_public: newPublicStatus } : s
+        )
+      );
+      
+      const action = newPublicStatus ? 'made public' : 'made private';
+      setSaveSuccess(`Flashcard set ${action} successfully!`);
+      setTimeout(() => setSaveSuccess(undefined), 3000);
+    } catch (error) {
+      console.error('Error toggling sharing:', error);
+      setSaveSuccess('Error updating sharing settings. Please try again.');
+      setTimeout(() => setSaveSuccess(undefined), 3000);
+    }
+  };
+
+  const handleCopyShareLink = async (set: FlashcardSet, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!set.is_public) {
+      // First make it public
+      await handleToggleSharing(set, e);
+    }
+    
+    const shareUrl = `${window.location.origin}/public/flashcards/${set.id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareLinkCopied(set.id);
+      setTimeout(() => setShareLinkCopied(null), 2000);
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -232,7 +275,14 @@ export default function FlashcardDashboardPage() {
                 <Card.Header>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <Card.Title>{set.title}</Card.Title>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Card.Title>{set.title}</Card.Title>
+                        {set.is_public && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                            Public
+                          </span>
+                        )}
+                      </div>
                       <Card.Description>{set.description || 'No description'}</Card.Description>
                     </div>
                     <BookOpen01Icon className="w-5 h-5 text-accent ml-2" />
@@ -269,6 +319,16 @@ export default function FlashcardDashboardPage() {
                     </div>
                     
                     <div className='flex gap-1  '>
+                    <Button
+                      size="sm" 
+                      variant="outline"
+                      onClick={(e) => handleCopyShareLink(set, e)}
+                      className="flex items-center gap-1"
+                    >
+                      <Share01Icon className="w-4 h-4" />
+                      {shareLinkCopied === set.id ? 'Copied!' : 'Share'}
+                    </Button>
+
                     <Button
                       size="sm" 
                       onClick={(e) => {
