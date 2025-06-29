@@ -8,6 +8,7 @@ import { useFlashcardActions } from "@/hook/useFlashcardActions";
 import { Flashcard, FlashcardSet } from "@/lib/database.types";
 import { createClient } from "@/utils/supabase/client";
 import { Share01Icon } from "hugeicons-react";
+import { formatMultipleChoiceQuestion } from "@/lib/utils";
 
 const supabase = createClient();
 
@@ -262,8 +263,8 @@ export default function FlashcardPage() {
                                 </span>
                             )}
                         </div>
-                        <div className="text-lg text-foreground leading-relaxed">
-                            {flashcard.question}
+                        <div className="text-lg text-foreground leading-relaxed whitespace-pre-line">
+                            {formatMultipleChoiceQuestion(flashcard.question)}
                         </div>
                     </Card.Header>
 

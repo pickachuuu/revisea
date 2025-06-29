@@ -23,7 +23,6 @@ export default function NotesPage() {
   const [notes, setNotes] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedText, setSelectedText] = useState('');
   const [selectedNote, setSelectedNote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -155,7 +154,6 @@ export default function NotesPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedNote(null);
-    setSelectedText('');
   };
 
   return (
@@ -293,7 +291,6 @@ export default function NotesPage() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         noteContent={selectedNote?.content || ''}  
-        selectedSection={selectedText}
         onFlashcardsGenerated={handleFlashcardsGenerated}
         saving={saving}
       />
