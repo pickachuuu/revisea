@@ -102,8 +102,23 @@ IMPORTANT: Difficulty should be based on concept complexity, NOT word count. All
 
 Keep all answers concise regardless of difficulty level to minimize token usage.`;
 
+    // Extract custom instructions from context if present
+    let customInstructions = '';
+    let existingFlashcardsContext = '';
+    
     if (context) {
-      prompt += `\n\n${context}`;
+      // Check if context contains custom instructions
+      if (context.includes('Additional Instructions:')) {
+        const parts = context.split('Additional Instructions:');
+        existingFlashcardsContext = parts[0].trim();
+        customInstructions = parts[1].trim();
+      } else {
+        existingFlashcardsContext = context;
+      }
+    }
+
+    if (existingFlashcardsContext) {
+      prompt += `\n\n${existingFlashcardsContext}`;
     }
 
     prompt += `\n\nNote Content:
@@ -115,8 +130,9 @@ Instructions:
 3. Questions should test understanding, not just memorization
 4. Answers should be detailed but concise (aim for 1-3 sentences max)
 5. Difficulty should reflect concept complexity, not answer length
-6. ${context ? 'Focus on topics and concepts that are NOT already covered in the existing flashcards. Analyze the note content thoroughly to identify gaps.' : ''}
-7. Format your response as a JSON array with this exact structure:
+6. ${existingFlashcardsContext ? 'Focus on topics and concepts that are NOT already covered in the existing flashcards. Analyze the note content thoroughly to identify gaps.' : ''}
+${customInstructions ? `7. CRITICAL: Follow these specific instructions: ${customInstructions}` : ''}
+${customInstructions ? '8. ' : '7. '}Format your response as a JSON array with this exact structure:
 [
   {
     "question": "What is...?",
@@ -124,6 +140,27 @@ Instructions:
     "difficulty": "easy|medium|hard"
   }
 ]
+
+${customInstructions && customInstructions.toLowerCase().includes('multiple choice') ? `
+SPECIAL INSTRUCTIONS FOR MULTIPLE CHOICE:
+- FORMAT THE QUESTION WITH LINE BREAKS BETWEEN OPTIONS
+- Question structure: "Which of the following is correct about [topic]?" followed by line break
+- Then each option on its own line:
+  A) [first option] (line break)
+  B) [second option] (line break)
+  C) [third option] (line break) 
+  D) [fourth option]
+- The answer should only be the correct option letter (A, B, C, or D)
+- Example format:
+  "question": "Which of the following is correct about photosynthesis?
+A) Plants convert sunlight into energy
+B) Animals perform photosynthesis
+C) Photosynthesis only occurs at night
+D) No organisms use photosynthesis",
+  "answer": "A"
+- MANDATORY: Use actual line breaks between A), B), C), and D) options in the question field
+- DO NOT put all options on the same line
+` : ''}
 
 Please ensure the JSON is valid and properly formatted.
 IMPORTANT: Do not wrap the JSON in \`\`\`json or add any prefix/suffix.
@@ -151,9 +188,37 @@ Do not include any additional text outside the JSON array.`;
           throw new Error(`Invalid flashcard at index ${index}`);
         }
         
+        // Post-process multiple choice questions to ensure proper formatting
+        let processedQuestion = card.question.trim();
+        let processedAnswer = card.answer.trim();
+        
+        // Check if this looks like a multiple choice question that needs formatting
+        // Simple check: contains A), B), C), D) and doesn't already have line breaks
+        if (processedQuestion.includes('A)') && processedQuestion.includes('B)') && 
+            processedQuestion.includes('C)') && processedQuestion.includes('D)') &&
+            !processedQuestion.includes('\nA)') && !processedQuestion.includes('\nB)')) {
+          
+          console.log('Processing multiple choice question:', processedQuestion);
+          
+          // Format the question with line breaks
+          processedQuestion = processedQuestion
+            .replace(/A\)/g, '\nA)')
+            .replace(/B\)/g, '\nB)')
+            .replace(/C\)/g, '\nC)')
+            .replace(/D\)/g, '\nD)')
+            .trim();
+          
+          // Remove the first line break if it's at the beginning
+          if (processedQuestion.startsWith('\n')) {
+            processedQuestion = processedQuestion.substring(1);
+          }
+          
+          console.log('After processing:', processedQuestion);
+        }
+        
         return {
-          question: card.question.trim(),
-          answer: card.answer.trim(),
+          question: processedQuestion,
+          answer: processedAnswer,
           difficulty: card.difficulty || 'medium'
         };
       });

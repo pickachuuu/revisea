@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createGeminiService, GeminiFlashcard, GeminiResponse } from '@/lib/gemini';
 import Button from '@/component/ui/Button';
 import Card from '@/component/ui/Card';
-import { cn } from '@/lib/utils';
+import { cn, formatMultipleChoiceQuestion } from '@/lib/utils';
 
 export interface ReforgeModalProps {
   isOpen: boolean;
@@ -12,7 +12,6 @@ export interface ReforgeModalProps {
   noteContent: string;
   existingFlashcards: GeminiFlashcard[];
   onFlashcardsGenerated?: (geminiResponse: GeminiResponse, action: 'add_more' | 'regenerate') => void;
-  selectedSection?: string;
   saving?: boolean;
 }
 
@@ -20,7 +19,7 @@ interface ReforgeSettings {
   action: 'regenerate' | 'add_more';
   minCount: number;
   difficulty: 'easy' | 'medium' | 'hard' | 'all';
-  useSelectedSection: boolean;
+  customPrompt: string;
   previewMode: boolean;
 }
 
@@ -36,7 +35,7 @@ const DEFAULT_SETTINGS: ReforgeSettings = {
   action: 'add_more',
   minCount: 3,
   difficulty: 'medium',
-  useSelectedSection: false,
+  customPrompt: '',
   previewMode: false,
 };
 
@@ -46,7 +45,6 @@ export default function ReforgeModal({
   noteContent,
   existingFlashcards,
   onFlashcardsGenerated,
-  selectedSection,
   saving,
 }: ReforgeModalProps) {
   const [settings, setSettings] = useState<ReforgeSettings>(DEFAULT_SETTINGS);
@@ -96,13 +94,8 @@ export default function ReforgeModal({
       return false;
     }
 
-    if (settings.useSelectedSection && !selectedSection?.trim()) {
-      setError('Selected section is required when "Use selected section" is enabled');
-      return false;
-    }
-
     return true;
-  }, [noteContent, settings, selectedSection]);
+  }, [noteContent, settings]);
 
   const generateFlashcards = useCallback(async () => {
     if (!validateInputs()) return;
@@ -119,20 +112,22 @@ export default function ReforgeModal({
 
       const geminiService = createGeminiService(apiKey);
       
-      const contentToUse = settings.useSelectedSection && selectedSection 
-        ? selectedSection 
-        : noteContent;
-
       const apiDifficulty = settings.difficulty === 'all' ? 'medium' : settings.difficulty;
 
       // Create context about existing flashcards to avoid duplicates
       const existingQuestions = existingFlashcards.map(fc => fc.question).join('\n');
-      const context = settings.action === 'add_more' 
+      let context = settings.action === 'add_more' 
         ? `Existing flashcards:\n${existingQuestions}\n\nPlease generate ${settings.minCount} new flashcards that are different from the existing ones. Focus on topics in the note that haven't been covered yet. Analyze the note content thoroughly to identify important concepts, facts, or relationships that are missing from the existing flashcards.`
         : undefined;
 
+      // Add custom prompt if provided - this will be handled specially by the Gemini service
+      if (settings.customPrompt.trim()) {
+        const customInstruction = `\n\nAdditional Instructions: ${settings.customPrompt}`;
+        context = context ? context + customInstruction : customInstruction;
+      }
+
       const response = await geminiService.generateFlashcards(
-        contentToUse,
+        noteContent,
         settings.minCount,
         apiDifficulty,
         context
@@ -159,7 +154,7 @@ export default function ReforgeModal({
     } finally {
       setIsLoading(false);
     }
-  }, [settings, noteContent, selectedSection, validateInputs, onFlashcardsGenerated, onClose, existingFlashcards]);
+  }, [settings, noteContent, validateInputs, onFlashcardsGenerated, onClose, existingFlashcards]);
 
   const handleSaveFlashcards = useCallback(() => {
     // Only pass the newly generated flashcards, not the combined ones
@@ -274,25 +269,23 @@ export default function ReforgeModal({
               </select>
             </div>
 
-            {/* Use selected section toggle */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="useSelectedSection"
-                checked={settings.useSelectedSection}
-                onChange={(e) => handleSettingChange('useSelectedSection', e.target.checked)}
-                className="w-4 h-4 text-accent border-border rounded focus:ring-accent"
-                disabled={isLoading || !selectedSection}
-              />
-              <label htmlFor="useSelectedSection" className="text-sm font-medium">
-                Generate from selected section only
+            {/* Custom prompt input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Custom Instructions (Optional)
               </label>
-            </div>
-            {settings.useSelectedSection && !selectedSection && (
-              <p className="text-xs text-red-500">
-                No section selected. Please select text in your note first.
+              <textarea
+                value={settings.customPrompt}
+                onChange={(e) => handleSettingChange('customPrompt', e.target.value)}
+                placeholder="e.g., Make them multiple choice questions, focus on identification questions, create scenario-based questions, emphasize key terms and definitions..."
+                className="w-full px-3 py-2 border border-border rounded-md bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                rows={3}
+                disabled={isLoading}
+              />
+              <p className="text-xs text-foreground-muted">
+                Add specific instructions to customize how flashcards are generated. Examples: "Make them multiple choice", "Focus on identification questions", "Create scenario-based questions"
               </p>
-            )}
+            </div>
 
             {/* Preview mode toggle */}
             <div className="flex items-center space-x-2">
@@ -394,7 +387,7 @@ export default function ReforgeModal({
                       <div className="space-y-2">
                         <div>
                           <strong className="text-sm">Question:</strong>
-                          <p className="text-sm mt-1">{flashcard.question}</p>
+                          <p className="text-sm mt-1 whitespace-pre-line">{formatMultipleChoiceQuestion(flashcard.question)}</p>
                         </div>
                         <div>
                           <strong className="text-sm">Answer:</strong>
