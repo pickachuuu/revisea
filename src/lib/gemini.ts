@@ -93,7 +93,14 @@ export class GeminiService {
   ): string {
     let prompt = `You are an expert educator creating flashcards from study notes. 
 
-Please create ${count} high-quality flashcards from the following note content. The flashcards should be at a ${difficulty} difficulty level.`;
+Please create ${count} high-quality flashcards from the following note content. The flashcards should be at a ${difficulty} difficulty level.
+
+IMPORTANT: Difficulty should be based on concept complexity, NOT word count. All answers should be concise and to the point:
+- Easy: Basic facts, definitions, simple concepts
+- Medium: Application of concepts, moderate complexity
+- Hard: Advanced analysis, synthesis, complex relationships
+
+Keep all answers concise regardless of difficulty level to minimize token usage.`;
 
     if (context) {
       prompt += `\n\n${context}`;
@@ -104,10 +111,12 @@ ${noteContent}
 
 Instructions:
 1. Create exactly ${count} flashcards
-2. Each flashcard should have a clear question and comprehensive answer
+2. Each flashcard should have a clear question and concise answer
 3. Questions should test understanding, not just memorization
-4. Answers should be detailed but concise
-5. Format your response as a JSON array with this exact structure:
+4. Answers should be detailed but concise (aim for 1-3 sentences max)
+5. Difficulty should reflect concept complexity, not answer length
+6. ${context ? 'Focus on topics and concepts that are NOT already covered in the existing flashcards. Analyze the note content thoroughly to identify gaps.' : ''}
+7. Format your response as a JSON array with this exact structure:
 [
   {
     "question": "What is...?",

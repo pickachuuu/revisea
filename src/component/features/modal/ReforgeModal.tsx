@@ -127,7 +127,9 @@ export default function ReforgeModal({
 
       // Create context about existing flashcards to avoid duplicates
       const existingQuestions = existingFlashcards.map(fc => fc.question).join('\n');
-      const context = `Existing flashcards:\n${existingQuestions}\n\nPlease generate ${settings.minCount} new flashcards that are different from the existing ones.`;
+      const context = settings.action === 'add_more' 
+        ? `Existing flashcards:\n${existingQuestions}\n\nPlease generate ${settings.minCount} new flashcards that are different from the existing ones. Focus on topics in the note that haven't been covered yet. Analyze the note content thoroughly to identify important concepts, facts, or relationships that are missing from the existing flashcards.`
+        : undefined;
 
       const response = await geminiService.generateFlashcards(
         contentToUse,
@@ -142,11 +144,9 @@ export default function ReforgeModal({
       if (settings.previewMode) {
         setShowPreview(true);
       } else {
-        // Auto-save if not in preview mode
+        // Auto-save if not in preview mode - only pass the new flashcards
         const finalResponse: GeminiResponse = {
-          flashcards: settings.action === 'regenerate' 
-            ? response.flashcards 
-            : [...existingFlashcards, ...response.flashcards],
+          flashcards: response.flashcards, // Only the new flashcards
           total_tokens: response.total_tokens,
           cost_cents: response.cost_cents
         };
@@ -162,10 +162,9 @@ export default function ReforgeModal({
   }, [settings, noteContent, selectedSection, validateInputs, onFlashcardsGenerated, onClose, existingFlashcards]);
 
   const handleSaveFlashcards = useCallback(() => {
+    // Only pass the newly generated flashcards, not the combined ones
     const finalResponse: GeminiResponse = {
-      flashcards: settings.action === 'regenerate' 
-        ? generatedFlashcards 
-        : [...existingFlashcards, ...generatedFlashcards],
+      flashcards: generatedFlashcards, // Only the new flashcards
       total_tokens: 0,
       cost_cents: 0
     };
@@ -173,7 +172,7 @@ export default function ReforgeModal({
     onFlashcardsGenerated?.(finalResponse, settings.action);
     setShowPreview(false);
     onClose();
-  }, [generatedFlashcards, onFlashcardsGenerated, onClose, existingFlashcards, settings.action]);
+  }, [generatedFlashcards, onFlashcardsGenerated, onClose, settings.action]);
 
   const handleCancelPreview = useCallback(() => {
     setShowPreview(false);

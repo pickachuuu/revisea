@@ -164,7 +164,8 @@ export function useFlashcardActions() {
           }
         }
 
-        // Save new flashcards to the existing set
+        // For 'add_more', we only save the new flashcards (they're already filtered)
+        // For 'regenerate', we save all the new flashcards
         await saveFlashcards(existingSetId, null, flashcards);
 
         // Update the set's total_cards count
