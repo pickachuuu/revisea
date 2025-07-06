@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Card from '@/component/ui/Card';
 import Button from '@/component/ui/Button';
 import Header from '@/component/ui/Header';
@@ -11,9 +13,6 @@ import { File01Icon } from 'hugeicons-react';
 import { createClient } from '@/utils/supabase/client';
 
 const supabase = createClient();
-
-// Importing the editor dynamically to support SSR
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export default function NewNotePage() {
   const params = useParams();
@@ -27,6 +26,9 @@ export default function NewNotePage() {
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const [loading, setLoading] = useState(!!noteId);
   const [lastSaved, setLastSaved] = useState({ title: '', content: '', tags: [] as string[] });
+  const [editing, setEditing] = useState(true);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Fetch note if editing
   useEffect(() => {
@@ -127,13 +129,16 @@ export default function NewNotePage() {
     setContent(val || '');
   };
 
+  // Focus textarea when switching to edit mode
+  useEffect(() => {
+    if (editing && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [editing]);
+
   return (
     <div className="space-y-6">
-      <Header 
-        title={"Note Editor"} 
-      />
-      
-      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
         {/* Metadata Card */}
         <Card
           variant="elevated"
@@ -188,6 +193,7 @@ export default function NewNotePage() {
                     </span>
                   ))}
                 </div>
+
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -222,24 +228,53 @@ export default function NewNotePage() {
           variant="elevated"
           className="rounded-xl border border-border bg-surface shadow-sm transition-all duration-200"
         >
-          <Card.Header className="flex items-center justify-between border-b border-border pb-4">
-            <div className="flex items-center gap-2">
-              <File01Icon className="w-5 h-5 text-accent" />
-              <h3 className="font-medium">Editor</h3>
-            </div>
-          </Card.Header>
+            <Card.Header className=" border-b border-border pb-4">
+
+
+              <div className='flex gap-5 justify-start items-center'>
+                <div className="flex gap-2 items-center">
+                  <File01Icon className="w-5 h-5 text-accent" />
+                  <h3 className="font-medium">Editor</h3>
+                </div>              
+                
+                <Button
+                  onClick={() => setEditing(!editing)}
+                  variant={editing ? "default" : "outline"}
+                  size="sm"
+                  className={`text-xs h-8 w-12 px-3 transition-all duration-200 ${
+                    editing 
+                      ? "bg-accent text-white hover:bg-accent-light" 
+                      : "border border-border bg-transparent hover:bg-background-muted"
+                  }`}
+                >
+                  {editing ? "Preview" : "Edit"}
+                </Button>
+              </div>
+
+
+
+            </Card.Header>
+          
           <Card.Content className="p-0">
-            <div className="h-[calc(100vh-300px)] min-h-[500px]">
-              <MDEditor
-                value={content}
-                onChange={(val) => setContent(val || '')}
-                preview="edit"
-                height="100%"
-                textareaProps={{
-                  placeholder: 'Start writing your note in Markdown...'
-                }}
-                className="border-none"
-              />
+            <div className="w-full h-[600px]">
+              {editing ? (
+                <textarea
+                  ref={textareaRef}
+                  className="w-full h-full p-4 border-0 resize-none font-mono text-base bg-transparent text-foreground focus:outline-none focus:ring-0"
+                  value={content}
+                  onChange={e => {
+                    setContent(e.target.value);
+                  }}
+                  placeholder="Write your markdown here..."
+                  spellCheck={true}
+                />
+              ) : (
+                <div
+                  className="w-full h-full p-4 overflow-auto prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:text-foreground prose-blockquote:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-table:text-foreground prose-th:text-foreground prose-td:text-foreground"
+                >
+                  <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                </div>
+              )}
             </div>
           </Card.Content>
         </Card>
