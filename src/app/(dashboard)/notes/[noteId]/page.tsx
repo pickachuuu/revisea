@@ -303,7 +303,7 @@ export default function NewNotePage() {
               {editing ? (
                 <textarea
                   ref={textareaRef}
-                  className="w-full h-full p-4  rounded-lg resize-none font-mono text-base bg-background-muted text-foreground focus:outline-none focus:ring-0"
+                  className="shadow-md w-full h-full p-4 rounded-b-lg resize-none font-mono text-base bg-background-muted text-foreground focus:outline-none focus:ring-0"
                   value={content}
                   onChange={e => {
                     setContent(e.target.value);
