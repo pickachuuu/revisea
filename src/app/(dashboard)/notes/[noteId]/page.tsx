@@ -129,12 +129,58 @@ export default function NewNotePage() {
     setContent(val || '');
   };
 
+  // Markdown list continuation handler
+  const handleMarkdownListKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      const textarea = e.currentTarget;
+      const { selectionStart, selectionEnd, value } = textarea;
+      const before = value.slice(0, selectionStart);
+      const after = value.slice(selectionEnd);
+      const lineStart = before.lastIndexOf('\n') + 1;
+      const currentLine = before.slice(lineStart);
+
+      // Match unordered list (-, *, +) or ordered list (number.)
+      const unorderedMatch = currentLine.match(/^(\s*[-*+] )/);
+      const orderedMatch = currentLine.match(/^(\s*)(\d+)\. /);
+
+      if (unorderedMatch) {
+        e.preventDefault();
+        const insert = '\n' + unorderedMatch[1];
+        const newValue = value.slice(0, selectionStart) + insert + after;
+        setContent(newValue);
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = selectionStart + insert.length;
+        }, 0);
+      } else if (orderedMatch) {
+        e.preventDefault();
+        const spaces = orderedMatch[1] || '';
+        const number = parseInt(orderedMatch[2], 10) + 1;
+        const insert = `\n${spaces}${number}. `;
+        const newValue = value.slice(0, selectionStart) + insert + after;
+        setContent(newValue);
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = selectionStart + insert.length;
+        }, 0);
+      }
+    }
+  };
+
   // Focus textarea when switching to edit mode
   useEffect(() => {
     if (editing && textareaRef.current) {
       textareaRef.current.focus();
     }
   }, [editing]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      // Only scroll if caret is at the end
+      if (textarea.selectionStart === textarea.value.length) {
+        textarea.scrollTop = textarea.scrollHeight;
+      }
+    }
+  }, [content, editing]);
 
   return (
     <div className="space-y-6">
@@ -250,9 +296,6 @@ export default function NewNotePage() {
                   {editing ? "Preview" : "Edit"}
                 </Button>
               </div>
-
-
-
             </Card.Header>
           
           <Card.Content className="p-0">
@@ -260,11 +303,12 @@ export default function NewNotePage() {
               {editing ? (
                 <textarea
                   ref={textareaRef}
-                  className="w-full h-full p-4 border-0 resize-none font-mono text-base bg-transparent text-foreground focus:outline-none focus:ring-0"
+                  className="w-full h-full p-4  rounded-lg resize-none font-mono text-base bg-background-muted text-foreground focus:outline-none focus:ring-0"
                   value={content}
                   onChange={e => {
                     setContent(e.target.value);
                   }}
+                  onKeyDown={handleMarkdownListKeyDown}
                   placeholder="Write your markdown here..."
                   spellCheck={true}
                 />
