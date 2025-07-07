@@ -33,7 +33,7 @@ export default function MarkdownEditor() {
                 {editing ? (
                     <textarea
                         ref={textareaRef}
-                        className="w-full h-full p-2 border rounded resize-y font-mono text-base bg-white text-black dark:bg-gray-900 dark:text-white"
+                        className="w-full h-screen p-2 border rounded resize-y font-mono text-base bg-white text-black dark:bg-gray-900 dark:text-white"
                         value={markdownContent}
                         onChange={e => {
                             setMarkdownContent(e.target.value);
