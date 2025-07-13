@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS public.flashcard_sets (
     description TEXT,
     total_cards INTEGER DEFAULT 0,
     mastered_cards INTEGER DEFAULT 0,
+    is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
